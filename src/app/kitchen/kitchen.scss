@@ -59,6 +59,21 @@
 		background: var(--colorBackgroundPrimary);
 		border: 1px solid var(--colorBorder);
 
+
+		position: relative;
+
+		.dangerAction {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			--buttonWidth: 34px;
+		}
+
+		.primaryActionWrap {
+			display: grid;
+			align-content: center;
+		}
+
 		.name {
 			margin: 0;
 			font-weight: 600;

@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { Icon } from "xtreme-ui";
 
 import QuantityButton from "#components/base/QuantityButton";
 import type { TMenu } from "#utils/database/models/menu";
@@ -9,7 +8,7 @@ import type { TMenu } from "#utils/database/models/menu";
 import "./menuCard.scss";
 
 const MenuCard = (props: TMenuCardProps) => {
-	const { className, show, restrictOrder, showInfo, setShowInfo, item, quantity } = props;
+	const { className, show, restrictOrder, item, quantity } = props;
 	const [cardRef, inView] = useInView({ threshold: 0 });
 	const [isFlashing, setFlashing] = useState(false);
 	const flashTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -39,7 +38,6 @@ const MenuCard = (props: TMenuCardProps) => {
 		className,
 		isFlashing && "flash",
 		restrictOrder && "restrictOrder",
-		showInfo && "showInfo",
 		!item.image && "withoutImage",
 		window.matchMedia("(hover: hover)").matches && "hoverSupported",
 	);
@@ -53,21 +51,15 @@ const MenuCard = (props: TMenuCardProps) => {
 					{item.image && (
 						<div className="picture">
 							<span style={{ background: `url(${item.image})` }} />
-							<div className="description">{item.description}</div>
 						</div>
 					)}
 					<div className="options">
 						<div className="title">
 							<span>{item.name}</span>
-							{item.image && (
-								<div className="info" onClick={() => setShowInfo(showInfo ? false : !!item._id)}>
-									<Icon code={showInfo ? "f00d" : "f05a"} set="duotone" type="solid" />
-								</div>
-							)}
 						</div>
 						{!item.image && <div className="description">{item.description}</div>}
 						<div className="footer">
-							{!item.image && <div className="priceNoImage rupee">{item.price}</div>}
+							{!item.image && item.price > 0 && <div className="priceNoImage rupee">{item.price}</div>}
 							<QuantityButton
 								className="addToCart"
 								quantity={quantity}
@@ -77,7 +69,7 @@ const MenuCard = (props: TMenuCardProps) => {
 							/>
 						</div>
 					</div>
-					{item.image && (
+					{item.image && item.price > 0 && (
 						<div className="price rupee">
 							<div className="ribbonTop" />
 							<div className="ribbonBottom" />
@@ -96,8 +88,6 @@ type TMenuCardProps = {
 	className?: string;
 	show?: boolean;
 	restrictOrder?: boolean;
-	showInfo?: boolean;
-	setShowInfo: (showInfo: boolean) => void;
 	item: TMenuCustom;
 	quantity: number;
 	increaseQuantity: (item: TMenuCustom) => void;

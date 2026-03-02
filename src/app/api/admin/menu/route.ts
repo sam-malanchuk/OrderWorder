@@ -38,7 +38,6 @@ export async function POST(req: Request) {
 			})) ?? [];
 
 		if (!name) throw { status: 400, message: "Menu item name is required" };
-		if (!description) throw { status: 400, message: "Description is required" };
 		if (!category) throw { status: 400, message: "Category is required" };
 		if (!Number.isFinite(price)) throw { status: 400, message: "Valid price is required" };
 		if (!Number.isFinite(taxPercent)) throw { status: 400, message: "Valid tax percent is required" };
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
 			if (existing.restaurantID !== restaurantID) throw { status: 403, message: "Unauthorized menu edit" };
 
 			existing.name = name;
-			existing.description = description;
+			existing.description = description || "";
 			existing.category = category;
 			existing.price = price;
 			existing.taxPercent = taxPercent;
@@ -81,7 +80,7 @@ export async function POST(req: Request) {
 
 		const item = new Menus({
 			name,
-			description,
+			description: description || "",
 			category,
 			price,
 			taxPercent,
