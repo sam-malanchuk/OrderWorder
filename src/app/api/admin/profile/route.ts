@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 	try {
 		await connectDB();
 		const session = await getServerSession(authOptions);
-		const { name, avatar, orderUrlSlug } = await req.json();
+		const { name, avatar, orderUrlSlug, printUrl } = await req.json();
 
 		if (!session) throw { status: 401, message: "Authentication Required" };
 		if (!name?.trim()) throw { status: 400, message: "Company name is required" };
@@ -30,9 +30,15 @@ export async function POST(req: Request) {
 		profile.name = name.trim();
 		profile.avatar = avatar?.trim() ?? "";
 		profile.orderUrlSlug = sanitizedOrderUrlSlug || undefined;
+		profile.printUrl = printUrl?.trim() || undefined;
 		await profile.save();
 
-		return NextResponse.json({ status: 200, message: "Company details saved", orderUrlSlug: profile.orderUrlSlug || profile.restaurantID });
+		return NextResponse.json({
+			status: 200,
+			message: "Company details saved",
+			orderUrlSlug: profile.orderUrlSlug || profile.restaurantID,
+			printUrl: profile.printUrl || "",
+		});
 	} catch (err) {
 		console.log(err);
 		return CatchNextResponse(err);
