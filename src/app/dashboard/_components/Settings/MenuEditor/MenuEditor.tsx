@@ -51,6 +51,54 @@ const MenuEditor = () => {
 	const onEdit = (item: TMenu) => {
 		setEditItem(item);
 		setModalState("menuItemEditState");
+		void onSaveItem(item);
+	};
+	const onSaveItem = async (item?: TMenu) => {
+		const name = window.prompt("Menu item name", item?.name ?? "");
+		if (!name?.trim()) return;
+
+		const description = window.prompt("Description", item?.description ?? "");
+		if (!description?.trim()) return;
+
+		const categoryOptions = profile?.categories?.join(", ") ?? "";
+		const category = window.prompt(`Category (${categoryOptions})`, item?.category ?? profile?.categories?.[0] ?? "");
+		if (!category?.trim()) return;
+
+		const priceInput = window.prompt("Price", String(item?.price ?? ""));
+		if (!priceInput) return;
+
+		const taxInput = window.prompt("Tax Percent", String(item?.taxPercent ?? "5"));
+		if (!taxInput) return;
+
+		const veg = window.prompt("Veg type (veg, non-veg, contains-egg)", item?.veg ?? "veg");
+		if (!veg) return;
+
+		const foodType = window.prompt("Food type (spicy, extra-spicy, sweet) - optional", item?.foodType ?? "") ?? "";
+		const image = window.prompt("Image URL (optional)", item?.image ?? "") ?? "";
+
+		const req = await fetch("/api/admin/menu", {
+			method: "POST",
+			body: JSON.stringify({
+				itemId: item?._id,
+				name,
+				description,
+				category,
+				price: Number(priceInput),
+				taxPercent: Number(taxInput),
+				veg,
+				foodType,
+				image,
+				hidden: item?.hidden ?? false,
+			}),
+		});
+		const res = await req.json();
+
+		if (res?.status === 200) toast.success(res?.message);
+		else toast.error(res?.message);
+
+		await profileMutate();
+		setModalState("");
+		setEditItem(undefined);
 	};
 
 	if (profileLoading) return <Spinner fullpage label="Loading Menu..." />;
@@ -88,7 +136,15 @@ const MenuEditor = () => {
 					))}
 				</div>
 			</div>
-			<Button className={`menuEditorAdd ${modalState ? "active" : ""}`} onClick={() => setModalState("newState")} icon="2b" iconType="solid" />
+			<Button
+				className={`menuEditorAdd ${modalState ? "active" : ""}`}
+				onClick={() => {
+					setModalState("newState");
+					void onSaveItem();
+				}}
+				icon="2b"
+				iconType="solid"
+			/>
 		</div>
 	);
 };

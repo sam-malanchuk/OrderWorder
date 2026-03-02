@@ -59,7 +59,6 @@ export const authOptions: AuthOptions = {
 			credentials: {
 				restaurant: { label: "Restaurant Username", type: "text", placeholder: "Enter restaurant username" },
 				table: { label: "Table ID", type: "string", placeholder: "Enter the table id" },
-				phone: { label: "Phone Number", type: "number", placeholder: "Enter your phone number" },
 				fname: { label: "Name", type: "text", placeholder: "Enter your first name" },
 				lname: { label: "Name", type: "text", placeholder: "Enter your last name" },
 			},
@@ -68,18 +67,16 @@ export const authOptions: AuthOptions = {
 				if (!cred?.table) throw new Error("Table id is required");
 				if (!cred?.fname) throw new Error("First name is required");
 				if (!cred?.lname) throw new Error("Last name is required");
-				if (!cred?.phone) throw new Error("Phone number is required");
 
 				await connectDB();
+				const generatedPhone = `guest-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 				const customerCred = {
 					fname: cred?.fname,
 					lname: cred?.lname,
-					phone: cred?.phone,
+					phone: generatedPhone,
 				};
 
-				let customer = await Customers.findOne({ phone: cred?.phone });
-
-				if (!customer) customer = await new Customers(customerCred).save();
+				const customer = await new Customers(customerCred).save();
 
 				const account = await Accounts.findOne<TAccount>({ username: cred?.restaurant }).populate("profile").populate("tables");
 
