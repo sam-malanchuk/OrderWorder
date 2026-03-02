@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import connectDB from "#utils/database/connect";
 import { Accounts, type TAccount } from "#utils/database/models/account";
 import { Customers } from "#utils/database/models/customer";
+import { Profiles, type TProfile } from "#utils/database/models/profile";
 
 import { isEmailValid } from "./common";
 import { verifyPassword } from "./passwordHelper";
@@ -78,7 +79,14 @@ export const authOptions: AuthOptions = {
 
 				const customer = await new Customers(customerCred).save();
 
-				const account = await Accounts.findOne<TAccount>({ username: cred?.restaurant }).populate("profile").populate("tables");
+				let account = await Accounts.findOne<TAccount>({ username: cred?.restaurant }).populate("profile").populate("tables");
+
+				if (!account) {
+					const profile = await Profiles.findOne<TProfile>({ orderUrlSlug: cred?.restaurant }).select("restaurantID").lean();
+					if (profile?.restaurantID) {
+						account = await Accounts.findOne<TAccount>({ username: profile.restaurantID }).populate("profile").populate("tables");
+					}
+				}
 
 				if (!account) throw new Error("Restaurant not found.");
 				if (!account?.tables?.some?.(({ username }: { username: string }) => username === cred?.table)) throw new Error("Invalid table id");
