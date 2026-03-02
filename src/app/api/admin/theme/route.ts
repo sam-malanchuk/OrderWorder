@@ -11,16 +11,19 @@ export async function POST(req: Request) {
 	try {
 		await connectDB();
 		const session = await getServerSession(authOptions);
-		const { themeColor } = await req.json();
+		const { themeColor, target = "admin" } = await req.json();
 
 		if (!session) throw { status: 401, message: "Authentication Required" };
 		if (!isValidThemeColor(themeColor)) throw { status: 400, message: "Valid theme color is required" };
+		if (!["admin", "frontend", "ready"].includes(target)) throw { status: 400, message: "Invalid theme target" };
 
 		const profile = await Profiles.findOne<TProfile>({ restaurantID: session?.username });
 
 		if (!profile) throw { status: 500, message: "Something went wrong" };
 
-		profile.themeColor = themeColor;
+		if (target === "frontend") profile.themeFrontend = themeColor;
+		else if (target === "ready") profile.themeReady = themeColor;
+		else profile.themeAdmin = themeColor;
 		await profile.save();
 
 		return NextResponse.json({ status: 200, message: "Theme applied successfully" });

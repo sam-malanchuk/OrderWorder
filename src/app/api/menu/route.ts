@@ -19,10 +19,14 @@ export async function GET(req: Request) {
 		}
 		if (!username) throw { status: 400, message: "Restaurant id is required to fetch menu" };
 
-		let account = await getRestaurantData(username);
-		if (!account) {
-			const profile = await Profiles.findOne<TProfile>({ orderUrlSlug: username }).select("restaurantID").lean();
-			if (profile?.restaurantID) account = await getRestaurantData(profile.restaurantID);
+		let account = null;
+		const profileBySlug = await Profiles.findOne<TProfile>({ orderUrlSlug: username }).select("restaurantID").lean();
+		if (profileBySlug?.restaurantID) {
+			account = await getRestaurantData(profileBySlug.restaurantID);
+		} else {
+			const profileById = await Profiles.findOne<TProfile>({ restaurantID: username }).select("restaurantID orderUrlSlug").lean();
+			if (profileById?.orderUrlSlug) throw { status: 404, message: "Restaurant URL has changed" };
+			account = await getRestaurantData(username);
 		}
 		if (!account) throw { status: 404, message: `Account with restaurant id: ${username} is not found` };
 

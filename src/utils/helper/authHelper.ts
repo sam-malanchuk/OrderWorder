@@ -38,7 +38,7 @@ export const authOptions: AuthOptions = {
 					return {
 						id: account._id.toString(),
 						role: "kitchen",
-						themeColor: account?.profile?.themeColor,
+						themeColor: account?.profile?.themeAdmin ?? account?.profile?.themeColor,
 						_doc: account as unknown as TAccount, // using account as the doc
 					};
 				} else {
@@ -47,7 +47,7 @@ export const authOptions: AuthOptions = {
 					return {
 						id: account._id.toString(),
 						role: "admin",
-						themeColor: account?.profile?.themeColor,
+						themeColor: account?.profile?.themeAdmin ?? account?.profile?.themeColor,
 						_doc: account as unknown as TAccount,
 					};
 				}
@@ -86,7 +86,7 @@ export const authOptions: AuthOptions = {
 				return {
 					id: customer._id.toString(), // Use customer ID or empty string if suitable
 					role: "customer",
-					themeColor: account?.profile?.themeColor,
+					themeColor: account?.profile?.themeFrontend ?? account?.profile?.themeColor,
 					_doc: {
 						role: "customer",
 						customer: customer,

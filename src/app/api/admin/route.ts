@@ -29,6 +29,7 @@ export async function GET() {
 
 		return NextResponse.json({
 			profile,
+			email: account.email,
 			menus: account.menus,
 			tables: account.tables,
 		});
