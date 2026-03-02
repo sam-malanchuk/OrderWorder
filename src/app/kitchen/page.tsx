@@ -24,8 +24,9 @@ type TKitchenOrder = {
 const Kitchen = () => {
 	const session = useSession();
 	const router = useRouter();
-	const { data, isLoading, mutate } = useSWR<TKitchenOrder[] | { message?: string }>(session.status === "authenticated" ? "/api/admin/order" : null, fetcher, {
+	const { data, isLoading, mutate } = useSWR<TKitchenOrder[] | { message?: string }>(session.status === "unauthenticated" ? null : "/api/admin/order", fetcher, {
 		refreshInterval: 5000,
+		revalidateOnFocus: true,
 	});
 	const orders = Array.isArray(data) ? data : [];
 
@@ -51,7 +52,7 @@ const Kitchen = () => {
 		if (req.ok) await mutate();
 	};
 
-	if (session.status === "loading" || isLoading) return <Spinner fullpage label="Loading kitchen screen..." />;
+	if (session.status === "loading" || (isLoading && !data)) return <Spinner fullpage label="Loading kitchen screen..." />;
 
 	return (
 		<div className="kitchenBoard">

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button, Lottie } from "xtreme-ui";
@@ -18,6 +18,7 @@ import "./cartPage.scss";
 const CartPage = (props: TCartPageProps) => {
 	const { selectedProducts, increaseProductQuantity, decreaseProductQuantity, resetSelectedProducts } = props;
 	const params = useSearchParams();
+	const pathname = usePathname();
 	const table = params.get("table");
 	const { order, placeOrder, placingOrder, cancelOrder, cancelingOrder } = useOrder();
 	const [showOrderHistory, setShowOrderHistory] = useState(false);
@@ -37,8 +38,10 @@ const CartPage = (props: TCartPageProps) => {
 			// return endOrder();
 		}
 
-		await placeOrder(selectedProducts);
+		const placed = await placeOrder(selectedProducts);
 		resetSelectedProducts();
+
+		if (placed) await signOut({ redirect: true, callbackUrl: pathname });
 	};
 	const onCancelOrder = async () => {
 		await cancelOrder();
