@@ -1,17 +1,18 @@
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Avatar, Button, Lottie, Textfield } from "xtreme-ui";
+import { Avatar, Button, Lottie, Textfield, useXTheme } from "xtreme-ui";
 
 import { useAdmin } from "#components/context/useContext";
-import { getAnimSrc } from "#utils/constants/common";
+import { DEFAULT_THEME_COLOR, getAnimSrc } from "#utils/constants/common";
 import type { TProfile } from "#utils/database/models/profile";
 
 import "./loginSection.scss";
 
 const LoginSection = () => {
+	const { setThemeColor } = useXTheme();
 	const router = useRouter();
 	const session = useSession();
 	const { profile: dashboard, profileLoading } = useAdmin();
@@ -67,10 +68,16 @@ const LoginSection = () => {
 		setNextLoading(false);
 	};
 	const logout = () => {
+		setThemeColor(DEFAULT_THEME_COLOR);
 		if (!loggedIn) return setProfile(undefined);
 		setLogoutLoading(true);
 		router.push("/logout");
 	};
+
+	useEffect(() => {
+		const newColor = profile?.themeColor ?? dashboard?.themeColor;
+		if (newColor) setThemeColor(profile?.themeColor ?? dashboard?.themeColor);
+	}, [profile, dashboard, setThemeColor]);
 
 	return (
 		<section className="loginSection" id="homepage-login">

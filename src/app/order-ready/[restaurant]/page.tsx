@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { use, useMemo } from "react";
 import useSWR from "swr";
 
@@ -19,7 +18,6 @@ type TReadyBoardOrder = {
 const OrderReadyPage = ({ params }: { params: Promise<{ restaurant: string }> }) => {
 	const { restaurant } = use(params);
 	const { data: orders = [] } = useSWR<TReadyBoardOrder[]>(`/api/order-ready/${restaurant}`, fetcher, { refreshInterval: 5000 });
-	const { data: restaurantData } = useSWR<{ profile?: { avatar?: string; name?: string } }>(`/api/menu?id=${restaurant}`, fetcher);
 
 	const columns = useMemo(
 		() => ({
@@ -32,11 +30,6 @@ const OrderReadyPage = ({ params }: { params: Promise<{ restaurant: string }> })
 
 	return (
 		<div className="orderReadyBoard">
-			{restaurantData?.profile?.avatar && (
-				<div className="brandOverlay">
-					<Image src={restaurantData.profile.avatar} alt={restaurantData?.profile?.name ?? "Company logo"} width={180} height={64} />
-				</div>
-			)}
 			<header>
 				<h1>Order Ready Screen</h1>
 			</header>

@@ -17,21 +17,6 @@ const ProfileSchema = new mongoose.Schema<TProfile>(
 			s: { type: Number, trim: true, min: 0, max: 100 },
 			l: { type: Number, trim: true, min: 0, max: 100 },
 		},
-		themeAdmin: {
-			h: { type: Number, trim: true, min: 0, max: 360 },
-			s: { type: Number, trim: true, min: 0, max: 100 },
-			l: { type: Number, trim: true, min: 0, max: 100 },
-		},
-		themeFrontend: {
-			h: { type: Number, trim: true, min: 0, max: 360 },
-			s: { type: Number, trim: true, min: 0, max: 100 },
-			l: { type: Number, trim: true, min: 0, max: 100 },
-		},
-		themeReady: {
-			h: { type: Number, trim: true, min: 0, max: 360 },
-			s: { type: Number, trim: true, min: 0, max: 100 },
-			l: { type: Number, trim: true, min: 0, max: 100 },
-		},
 		gstInclusive: { type: Boolean, default: false },
 		categories: [{ type: String, trim: true, lowercase: true, match: /^[^,]*$/ }],
 		categorySettings: [
@@ -86,9 +71,6 @@ export type TProfile = HydratedDocument<{
 	cover: string;
 	photos: Array<string>;
 	themeColor: TThemeColor;
-	themeAdmin?: TThemeColor;
-	themeFrontend?: TThemeColor;
-	themeReady?: TThemeColor;
 	gstInclusive: boolean;
 	categories: Array<string>;
 	categorySettings?: Array<{ name: string; color: string; hidden: boolean }>;

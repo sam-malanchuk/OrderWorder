@@ -1,57 +1,33 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 import { toast } from "react-toastify";
-import { Button } from "xtreme-ui";
+import { Button, isEqual, isValidThemeColor, Spinner, ThemePicker, ThemeSelect, useScreenType, useXTheme } from "xtreme-ui";
 
 import { useAdmin } from "#components/context/useContext";
-import type { TProfile } from "#utils/database/models/profile";
 
 import "./themeSettings.scss";
 
-type TThemeTarget = "admin" | "frontend" | "ready";
-type TThemeForm = { h: number; s: number; l: number };
-
-const toThemeForm = (color?: TProfile["themeColor"]): TThemeForm => ({
-	h: Number(color?.h ?? 26),
-	s: Number(color?.s ?? 90),
-	l: Number(color?.l ?? 55),
-});
-
 const ThemeSettings = () => {
 	const { profile, profileMutate } = useAdmin();
+	const { themeColor, setThemeColor } = useXTheme();
+	const { isMobile } = useScreenType({
+		mobile: 779,
+	});
+
 	const [loading, setLoading] = useState(false);
-	const [target, setTarget] = useState<TThemeTarget>("admin");
-	const [adminTheme, setAdminTheme] = useState<TThemeForm>(toThemeForm());
-	const [frontendTheme, setFrontendTheme] = useState<TThemeForm>(toThemeForm());
-	const [readyTheme, setReadyTheme] = useState<TThemeForm>(toThemeForm());
 
-	useEffect(() => {
-		setAdminTheme(toThemeForm(profile?.themeAdmin ?? profile?.themeColor));
-		setFrontendTheme(toThemeForm(profile?.themeFrontend ?? profile?.themeColor));
-		setReadyTheme(toThemeForm(profile?.themeReady ?? profile?.themeColor));
-	}, [profile?.themeAdmin, profile?.themeFrontend, profile?.themeReady, profile?.themeColor]);
-
-	const activeTheme = useMemo(() => {
-		if (target === "frontend") return frontendTheme;
-		if (target === "ready") return readyTheme;
-		return adminTheme;
-	}, [target, adminTheme, frontendTheme, readyTheme]);
-
-	const setActiveTheme = (next: TThemeForm) => {
-		if (target === "frontend") return setFrontendTheme(next);
-		if (target === "ready") return setReadyTheme(next);
-		return setAdminTheme(next);
+	const onClear = () => {
+		if (isValidThemeColor(profile?.themeColor)) setThemeColor(profile?.themeColor);
 	};
 
 	const onSave = async () => {
 		setLoading(true);
 		const req = await fetch("/api/admin/theme", {
 			method: "POST",
-			body: JSON.stringify({ target, themeColor: activeTheme }),
+			body: JSON.stringify({ themeColor }),
 		});
 		const res = await req.json();
 		if (res?.status !== 200) toast.error(res?.message);
-		else toast.success(res?.message);
 		await profileMutate();
 		setLoading(false);
 	};
@@ -60,31 +36,23 @@ const ThemeSettings = () => {
 		<div className="themeSettings">
 			<div className="colorHeader">
 				<h1 className="heading">
-					Theme <span>Settings</span>
+					Theme <span>Color</span>
 				</h1>
+				{!isEqual(profile?.themeColor, themeColor) && (
+					<div className="action">
+						<Button className="clear" type="secondaryDanger" icon="f00d" iconType="solid" disabled={loading} onClick={onClear} />
+						<Button className="save" icon="f00c" iconType="solid" label="Apply" loading={loading} onClick={onSave} />
+					</div>
+				)}
 			</div>
-			<div className="themeTargetActions">
-				<Button type={target === "admin" ? "primary" : "secondary"} size="mini" label="Admin" onClick={() => setTarget("admin")} />
-				<Button type={target === "frontend" ? "primary" : "secondary"} size="mini" label="Frontend" onClick={() => setTarget("frontend")} />
-				<Button type={target === "ready" ? "primary" : "secondary"} size="mini" label="Order Ready" onClick={() => setTarget("ready")} />
-			</div>
-			<div className="hslEditor">
-				<label>
-					<span>Hue</span>
-					<input type="number" min={0} max={360} value={activeTheme.h} onChange={(e) => setActiveTheme({ ...activeTheme, h: Number(e.target.value) })} />
-				</label>
-				<label>
-					<span>Saturation</span>
-					<input type="number" min={0} max={100} value={activeTheme.s} onChange={(e) => setActiveTheme({ ...activeTheme, s: Number(e.target.value) })} />
-				</label>
-				<label>
-					<span>Lightness</span>
-					<input type="number" min={0} max={100} value={activeTheme.l} onChange={(e) => setActiveTheme({ ...activeTheme, l: Number(e.target.value) })} />
-				</label>
-				<div className="preview" style={{ background: `hsl(${activeTheme.h} ${activeTheme.s}% ${activeTheme.l}%)` }} />
-			</div>
-			<div className="themeActions">
-				<Button icon="f00c" iconType="solid" label={`Save ${target} theme`} loading={loading} onClick={onSave} />
+			<div className="colorPickerWrapper">
+				{loading ? (
+					<Spinner className="spinner" label="Applying theme" fullpage />
+				) : isMobile ? (
+					<ThemeSelect size="default" withSwatch withScheme />
+				) : (
+					<ThemePicker />
+				)}
 			</div>
 		</div>
 	);

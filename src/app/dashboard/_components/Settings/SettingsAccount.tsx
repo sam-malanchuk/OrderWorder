@@ -14,13 +14,11 @@ import "./settingsAccount.scss";
 
 const SettingsAccount = () => {
 	const router = useRouter();
-	const { profile, email: accountEmail, profileMutate } = useAdmin();
+	const { profile, profileMutate } = useAdmin();
 	const session = useSession();
 	const [restaurantName, setRestaurantName] = useState<string[]>([]);
 	const [companyName, setCompanyName] = useState("");
 	const [companyImage, setCompanyImage] = useState("");
-	const [companyAddress, setCompanyAddress] = useState("");
-	const [loginEmail, setLoginEmail] = useState("");
 	const [savingCompany, setSavingCompany] = useState(false);
 	const [orderUrlSlug, setOrderUrlSlug] = useState("");
 
@@ -28,16 +26,14 @@ const SettingsAccount = () => {
 		if (profile?.name) setRestaurantName(splitStringByFirstWord(profile?.name) ?? []);
 		setCompanyName(profile?.name ?? "");
 		setCompanyImage(profile?.avatar ?? "");
-		setCompanyAddress(profile?.address ?? "");
-		setLoginEmail(accountEmail ?? session.data?.email ?? "");
 		setOrderUrlSlug(profile?.orderUrlSlug ?? profile?.restaurantID ?? "");
-	}, [profile?.avatar, profile?.name, profile?.orderUrlSlug, profile?.restaurantID, profile?.address, accountEmail, session.data?.email]);
+	}, [profile?.avatar, profile?.name, profile?.orderUrlSlug, profile?.restaurantID]);
 
 	const onSaveCompany = async () => {
 		setSavingCompany(true);
 		const req = await fetch("/api/admin/profile", {
 			method: "POST",
-			body: JSON.stringify({ name: companyName, avatar: companyImage, address: companyAddress, email: loginEmail, orderUrlSlug }),
+			body: JSON.stringify({ name: companyName, avatar: companyImage, orderUrlSlug }),
 		});
 		const res = await req.json();
 		if (res?.status === 200) {
@@ -76,14 +72,6 @@ const SettingsAccount = () => {
 				<label>
 					<span>Company Image URL</span>
 					<input value={companyImage} onChange={(e) => setCompanyImage(e.target.value)} placeholder="https://example.com/image.jpg" />
-				</label>
-				<label>
-					<span>Company Location / City</span>
-					<input value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} placeholder="City or location" />
-				</label>
-				<label>
-					<span>Default Login Email</span>
-					<input value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="name@example.com" />
 				</label>
 				<label>
 					<span>Order URL</span>

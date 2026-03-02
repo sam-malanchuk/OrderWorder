@@ -6,65 +6,68 @@
 	background: var(--colorBackgroundPrimary);
 	box-shadow: 0 10px 10px -10px rgb(0 0 0 / 10%);
 
-	.colorHeader .heading {
-		color: var(--colorContentPrimary);
-		font-size: 30px;
-		font-variation-settings: 'wdth' 75, 'wght' 500;
-		margin: 0;
-
-		span {
-			font-variation-settings: 'wdth' 75, 'wght' 300;
-		}
-	}
-
-	.themeTargetActions {
+	.colorHeader {
 		display: flex;
-		gap: 10px;
-		margin: 16px 0;
-		flex-wrap: wrap;
-	}
+		min-height: 50px;
+		justify-content: space-between;
+		align-items: center;
 
-	.hslEditor {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 12px;
-		align-items: end;
-
-		label {
-			display: grid;
-			gap: 6px;
+		.heading {
+			color: var(--colorContentPrimary);
+			font-size: 30px;
+			font-variation-settings: 'wdth' 75, 'wght' 500;
+			margin: 0;
+			overflow: hidden;
+			user-select: none;
+			white-space: nowrap;
+			transition: all 0.2s ease-out;
 
 			span {
-				font-size: 12px;
-				opacity: 0.8;
-			}
-
-			input {
-				height: 42px;
-				padding: 0 12px;
-				border-radius: 10px;
-				border: 1px solid var(--colorBorder);
-				background: var(--colorBackgroundSecondary);
-				color: var(--colorContentPrimary);
+				font-variation-settings: 'wdth' 75, 'wght' 300;
 			}
 		}
 
-		.preview {
-			height: 42px;
-			border-radius: 10px;
-			border: 1px solid var(--colorBorder);
+		.action {
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+			gap: 8px;
+
+			.clear {
+				transform: scale(0.8);
+			}
 		}
 	}
 
-	.themeActions {
+	.colorPickerWrapper {
 		display: flex;
-		justify-content: flex-end;
-		margin-top: 16px;
+		flex-direction: column;
+		margin: 36px 0 24px;
+
+		.spinner {
+			margin: 64px 0;
+		}
+
+		.colorPopper {
+			margin-bottom: 32px;
+		}
 	}
 }
 
-@media (width <= 900px) {
-	.themeSettings .hslEditor {
-		grid-template-columns: 1fr 1fr;
+@media (width <= 460px) {
+	.themeSettings {
+		.colorHeader .heading {
+			font-size: 24px;
+		}
+	}
+}
+
+@media (width <= 420px) {
+	.themeSettings {
+		padding: 20px 25px;
+
+		.colorHeader .heading {
+			font-size: 5vw;
+		}
 	}
 }
