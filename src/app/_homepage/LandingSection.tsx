@@ -12,7 +12,7 @@ const bgImg = "/backgrounds/landingCover.png";
 const overlayImg = "/backgrounds/landingCoverOverlay.png";
 const maxBlurPerImage = 30;
 const maxOverlayTranslate = 0.3;
-const LandingSection = () => {
+const LandingSection = ({ defaultRestaurantID }: LandingSectionProps) => {
 	const router = useRouter();
 	const { isDarkTheme } = useXTheme();
 	const ref = useRef<HTMLDivElement>(null);
@@ -55,7 +55,7 @@ const LandingSection = () => {
 				<p className="desc">paper menus. It&apos;s time for the new normal, OrderWorder</p>
 				<div className="greetingAction">
 					<Button label="Learn more" type="secondary" onClick={() => scrollToSection("homepage-aboutus")} />
-					<Button label="Order now" onClick={() => router.push("/scan")} />
+					<Button label="Order now" onClick={() => router.push(defaultRestaurantID ? `/${defaultRestaurantID}?tab=menu&table=1` : "/")} />
 				</div>
 			</div>
 		</section>
@@ -63,3 +63,7 @@ const LandingSection = () => {
 };
 
 export default LandingSection;
+
+type LandingSectionProps = {
+	defaultRestaurantID?: string;
+};

@@ -11,7 +11,7 @@ import LoginSection from "./LoginSection";
 import Navbar from "./Navbar";
 import "./github-banner.scss";
 
-export default function PageContainer() {
+export default function PageContainer({ defaultRestaurantID }: PageContainerProps) {
 	const [menuOpen, setMenuOpen] = useState(false);
 
 	return (
@@ -19,7 +19,7 @@ export default function PageContainer() {
 			<Navbar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 			<GitHubBanner />
 			<main className={`homepageSections ${menuOpen ? "menuOpen" : ""}`}>
-				<LandingSection />
+				<LandingSection defaultRestaurantID={defaultRestaurantID} />
 				<AboutSection />
 				<FeatureSection />
 				<LoginSection />
@@ -28,3 +28,7 @@ export default function PageContainer() {
 		</div>
 	);
 }
+
+type PageContainerProps = {
+	defaultRestaurantID?: string;
+};

@@ -21,7 +21,7 @@ const OrderPage = () => {
 
 	const menus = restaurant?.menus as Array<TMenuCustom>;
 	const params = useQueryParams();
-	const table = params.get("table");
+	const table = params.get("table") ?? "1";
 	const searchParam = params.get("search")?.trim() ?? "";
 	const categoryParam = params.get("category")?.trim();
 	const category = useMemo(() => (categoryParam ? categoryParam.split(",") : []), [categoryParam]);
@@ -84,8 +84,7 @@ const OrderPage = () => {
 		params.set({ category: newCategory.join(",") });
 	};
 	const onLoginClick = () => {
-		if (table) return setLoginOpen(true);
-		return params.router.push("/scan");
+		setLoginOpen(true);
 	};
 	const addItemToSelection = (product: TMenuCustom, selectedCustomization?: TCustomizationDraft) => {
 		const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
@@ -127,6 +126,10 @@ const OrderPage = () => {
 		});
 		setSelectedProducts(selection);
 	};
+
+	useEffect(() => {
+		if (!params.get("table")) params.set({ table: "1" });
+	}, [params]);
 
 	useEffect(() => {
 		const search = searchParam.toLowerCase();
