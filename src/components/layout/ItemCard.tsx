@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { useInView } from "react-intersection-observer";
 
 import QuantityButton from "#components/base/QuantityButton";
-import type { TMenu } from "#utils/database/models/menu";
+import type { TMenu, TTemperatureOption } from "#utils/database/models/menu";
 
 import "./itemCard.scss";
 
@@ -30,6 +30,7 @@ const ItemCard = (props: TItemCardProps) => {
 							<p className="subtitle">
 								{item.selectedCustomization.sweetness ? `Sweetness: ${item.selectedCustomization.sweetness}` : ""}
 								{item.selectedCustomization.ice ? ` • Ice: ${item.selectedCustomization.ice}` : ""}
+								{item.selectedCustomization.temperature ? ` • ${item.selectedCustomization.temperature === "hot" ? "Hot" : "Cold"}` : ""}
 								{item.selectedCustomization.milk ? ` • Milk: ${item.selectedCustomization.milk}` : ""}
 								{item.selectedCustomization.flavors?.length
 									? ` • Flavors: ${item.selectedCustomization.flavors.map((f) => `${f.name} (${f.level})`).join(", ")}`
@@ -78,6 +79,7 @@ type TMenuCustom = TMenu & {
 	selectedCustomization?: {
 		sweetness?: "none" | "lite" | "reg" | "extra";
 		ice?: "none" | "lite" | "reg" | "extra";
+		temperature?: TTemperatureOption;
 		milk?: string;
 		flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
 	};

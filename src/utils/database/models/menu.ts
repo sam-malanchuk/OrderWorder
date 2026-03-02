@@ -7,6 +7,7 @@ const accountCache = new Map<string, TAccount | null>();
 const FoodType = ["spicy", "extra-spicy", "sweet"] as const;
 const Veg = ["veg", "non-veg", "contains-egg"] as const;
 const ModifierLevel = ["none", "lite", "reg", "extra"] as const;
+const TemperatureOption = ["hot", "cold"] as const;
 
 const MenuSchema = new mongoose.Schema<TMenu>(
 	{
@@ -29,6 +30,10 @@ const MenuSchema = new mongoose.Schema<TMenu>(
 			ice: {
 				enabled: { type: Boolean, default: false },
 				defaultLevel: { type: String, trim: true, lowercase: true, enum: ModifierLevel, default: "reg" },
+			},
+			temperature: {
+				enabled: { type: Boolean, default: false },
+				defaultValue: { type: String, trim: true, lowercase: true, enum: TemperatureOption, default: "cold" },
 			},
 			milkOptions: [{ type: String, trim: true }],
 			defaultMilk: { type: String, trim: true },
@@ -73,6 +78,7 @@ export type TMenu = HydratedDocument<{
 		enabled?: boolean;
 		sweetness?: { enabled?: boolean; defaultLevel?: TModifierLevel };
 		ice?: { enabled?: boolean; defaultLevel?: TModifierLevel };
+		temperature?: { enabled?: boolean; defaultValue?: TTemperatureOption };
 		milkOptions?: string[];
 		defaultMilk?: string;
 		flavorOptions?: string[];
@@ -83,3 +89,4 @@ export type TMenu = HydratedDocument<{
 export type TFoodType = (typeof FoodType)[number];
 export type TVeg = (typeof Veg)[number];
 export type TModifierLevel = (typeof ModifierLevel)[number];
+export type TTemperatureOption = (typeof TemperatureOption)[number];

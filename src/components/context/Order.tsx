@@ -5,7 +5,7 @@ import { createContext, type ReactNode, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import useSWR from "swr";
 
-import type { TMenu } from "#utils/database/models/menu";
+import type { TMenu, TTemperatureOption } from "#utils/database/models/menu";
 import type { TOrder } from "#utils/database/models/order";
 import { fetcher } from "#utils/helper/common";
 
@@ -86,6 +86,7 @@ type TMenuCustom = TMenu & {
 	selectedCustomization?: {
 		sweetness?: "none" | "lite" | "reg" | "extra";
 		ice?: "none" | "lite" | "reg" | "extra";
+		temperature?: TTemperatureOption;
 		milk?: string;
 		flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
 	};

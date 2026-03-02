@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import connectDB from "#utils/database/connect";
-import { Menus, type TFoodType, type TMenu, type TVeg } from "#utils/database/models/menu";
+import { Menus, type TFoodType, type TMenu, type TTemperatureOption, type TVeg } from "#utils/database/models/menu";
 import { authOptions } from "#utils/helper/authHelper";
 import { CatchNextResponse } from "#utils/helper/common";
 
 const vegOptions: TVeg[] = ["veg", "non-veg", "contains-egg"];
 const foodTypeOptions: TFoodType[] = ["spicy", "extra-spicy", "sweet"];
 const levelOptions = ["none", "lite", "reg", "extra"] as const;
+const temperatureOptions: TTemperatureOption[] = ["hot", "cold"];
 
 export async function POST(req: Request) {
 	try {
@@ -68,6 +69,10 @@ export async function POST(req: Request) {
 					enabled: !!customization?.ice?.enabled,
 					defaultLevel: levelOptions.includes(customization?.ice?.defaultLevel) ? customization?.ice?.defaultLevel : "reg",
 				},
+				temperature: {
+					enabled: !!customization?.temperature?.enabled,
+					defaultValue: temperatureOptions.includes(customization?.temperature?.defaultValue) ? customization?.temperature?.defaultValue : "cold",
+				},
 				milkOptions: customization?.milkOptions?.map((v: string) => v.trim()).filter(Boolean) ?? [],
 				defaultMilk: customization?.defaultMilk?.trim() ?? "",
 				flavorOptions: customization?.flavorOptions?.map((v: string) => v.trim()).filter(Boolean) ?? [],
@@ -97,6 +102,10 @@ export async function POST(req: Request) {
 				ice: {
 					enabled: !!customization?.ice?.enabled,
 					defaultLevel: levelOptions.includes(customization?.ice?.defaultLevel) ? customization?.ice?.defaultLevel : "reg",
+				},
+				temperature: {
+					enabled: !!customization?.temperature?.enabled,
+					defaultValue: temperatureOptions.includes(customization?.temperature?.defaultValue) ? customization?.temperature?.defaultValue : "cold",
 				},
 				milkOptions: customization?.milkOptions?.map((v: string) => v.trim()).filter(Boolean) ?? [],
 				defaultMilk: customization?.defaultMilk?.trim() ?? "",

@@ -156,7 +156,7 @@ const CartPage = (props: TCartPageProps) => {
 								bottomBarActive
 									? "close"
 									: props.selectedProducts.length > 0
-										? `${selectionTotal} | ${order?.products?.length ? "Add to order" : "Place order"}`
+										? `${selectionTotal > 0 ? `${selectionTotal} | ` : ""}${order?.products?.length ? "Add to order" : "Place order"}`
 										: "Proceed to Pay"
 							}
 							loading={placingOrder}

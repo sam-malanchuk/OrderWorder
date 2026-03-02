@@ -6,7 +6,7 @@ import SearchButton from "#components/base/SearchButton";
 import SideSheet from "#components/base/SideSheet";
 import { useOrder, useRestaurant } from "#components/context/useContext";
 import Modal from "#components/layout/Modal";
-import type { TMenu, TModifierLevel } from "#utils/database/models/menu";
+import type { TMenu, TModifierLevel, TTemperatureOption } from "#utils/database/models/menu";
 import { useQueryParams } from "#utils/hooks/useQueryParams";
 
 import CartPage from "./CartPage";
@@ -87,7 +87,7 @@ const OrderPage = () => {
 	};
 	const addItemToSelection = (product: TMenuCustom, selectedCustomization?: TCustomizationDraft) => {
 		const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
-		const cartKey = `${product._id.toString()}-${selectedCustomization?.sweetness ?? ""}-${selectedCustomization?.ice ?? ""}-${selectedCustomization?.milk ?? ""}-${flavorKey}`;
+		const cartKey = `${product._id.toString()}-${selectedCustomization?.sweetness ?? ""}-${selectedCustomization?.ice ?? ""}-${selectedCustomization?.temperature ?? ""}-${selectedCustomization?.milk ?? ""}-${flavorKey}`;
 		const selection = [...selectedProducts];
 		if (selectedProducts.some((item) => item.cartKey === cartKey)) {
 			selection.forEach((item) => {
@@ -105,6 +105,7 @@ const OrderPage = () => {
 		setCustomizationDraft({
 			sweetness: product.customization?.sweetness?.enabled ? product.customization.sweetness.defaultLevel : undefined,
 			ice: product.customization?.ice?.enabled ? product.customization.ice.defaultLevel : undefined,
+			temperature: product.customization?.temperature?.enabled ? product.customization.temperature.defaultValue : undefined,
 			milk: product.customization?.defaultMilk,
 			flavors: product.customization?.defaultFlavors ?? [],
 		});
@@ -176,6 +177,7 @@ const OrderPage = () => {
 
 	const levelOptions: TModifierLevel[] = ["none", "lite", "reg", "extra"];
 	const levelLabel: Record<TModifierLevel, string> = { none: "None", lite: "Lite", reg: "Reg", extra: "Extra" };
+	const temperatureOptions: TTemperatureOption[] = ["hot", "cold"];
 	const onCustomizationConfirm = () => {
 		if (!customizationItem) return;
 		addItemToSelection(customizationItem, customizationDraft);
@@ -344,6 +346,26 @@ const OrderPage = () => {
 								</div>
 							</div>
 						)}
+						{customizationItem?.customization?.temperature?.enabled && (
+							<div className="customizationField">
+								<span className="label">Hot / Cold</span>
+								<div className="choiceGroup">
+									{temperatureOptions.map((temperature) => (
+										<button
+											key={temperature}
+											type="button"
+											className={
+												customizationDraft.temperature === temperature || (!customizationDraft.temperature && temperature === "cold")
+													? "active"
+													: ""
+											}
+											onClick={() => setCustomizationDraft((v) => ({ ...v, temperature }))}>
+											{temperature === "hot" ? "Hot" : "Cold"}
+										</button>
+									))}
+								</div>
+							</div>
+						)}
 						{(customizationItem?.customization?.milkOptions?.length ?? 0) > 0 && (
 							<div className="customizationField">
 								<span className="label">Milk</span>
@@ -382,6 +404,7 @@ const OrderPage = () => {
 														key={level}
 														type="button"
 														className={current?.level === level || (!current?.level && level === "none") ? "active" : ""}
+														disabled={isOutOfStock}
 														onClick={() => {
 															setCustomizationDraft((v) => {
 																const flavors = [...(v.flavors ?? [])].filter((f) => f.name !== flavor);
@@ -413,6 +436,7 @@ export default OrderPage;
 type TCustomizationDraft = {
 	sweetness?: TModifierLevel;
 	ice?: TModifierLevel;
+	temperature?: TTemperatureOption;
 	milk?: string;
 	flavors?: Array<{ name: string; level: TModifierLevel }>;
 };

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import connectDB from "#utils/database/connect";
-import { Menus, type TMenu, type TModifierLevel } from "#utils/database/models/menu";
+import { Menus, type TMenu, type TModifierLevel, type TTemperatureOption } from "#utils/database/models/menu";
 import { Orders, type TOrder, type TProduct } from "#utils/database/models/order";
 import { authOptions } from "#utils/helper/authHelper";
 import { CatchNextResponse } from "#utils/helper/common";
 
 const levels: TModifierLevel[] = ["none", "lite", "reg", "extra"];
+const temperatures: TTemperatureOption[] = ["hot", "cold"];
 
 export async function POST(req: Request) {
 	try {
@@ -36,6 +37,11 @@ export async function POST(req: Request) {
 						? levels.includes((selected?.ice ?? config?.ice?.defaultLevel ?? "reg") as TModifierLevel)
 							? (selected?.ice ?? config?.ice?.defaultLevel ?? "reg")
 							: "reg"
+						: undefined,
+					temperature: config?.temperature?.enabled
+						? temperatures.includes((selected?.temperature ?? config?.temperature?.defaultValue ?? "cold") as TTemperatureOption)
+							? (selected?.temperature ?? config?.temperature?.defaultValue ?? "cold")
+							: "cold"
 						: undefined,
 					milk: selected?.milk && config?.milkOptions?.includes(selected.milk) ? selected.milk : config?.defaultMilk,
 					flavors:
@@ -85,6 +91,7 @@ type TOrderPlaceProduct = {
 	selectedCustomization?: {
 		sweetness?: TModifierLevel;
 		ice?: TModifierLevel;
+		temperature?: TTemperatureOption;
 		milk?: string;
 		flavors?: Array<{ name: string; level: TModifierLevel }>;
 	};
