@@ -6,6 +6,7 @@ const accountCache = new Map<string, TAccount | null>();
 
 const FoodType = ["spicy", "extra-spicy", "sweet"] as const;
 const Veg = ["veg", "non-veg", "contains-egg"] as const;
+const ModifierLevel = ["none", "lite", "reg", "extra"] as const;
 
 const MenuSchema = new mongoose.Schema<TMenu>(
 	{
@@ -19,6 +20,26 @@ const MenuSchema = new mongoose.Schema<TMenu>(
 		veg: { type: String, trim: true, lowercase: true, required: true, enum: Veg },
 		image: { type: String, trim: true },
 		hidden: { type: Boolean, default: true },
+		customization: {
+			enabled: { type: Boolean, default: false },
+			sweetness: {
+				enabled: { type: Boolean, default: false },
+				defaultLevel: { type: String, trim: true, lowercase: true, enum: ModifierLevel, default: "reg" },
+			},
+			ice: {
+				enabled: { type: Boolean, default: false },
+				defaultLevel: { type: String, trim: true, lowercase: true, enum: ModifierLevel, default: "reg" },
+			},
+			milkOptions: [{ type: String, trim: true }],
+			defaultMilk: { type: String, trim: true },
+			flavorOptions: [{ type: String, trim: true }],
+			defaultFlavors: [
+				{
+					name: { type: String, trim: true },
+					level: { type: String, trim: true, lowercase: true, enum: ModifierLevel, default: "reg" },
+				},
+			],
+		},
 	},
 	{ timestamps: true },
 );
@@ -48,7 +69,17 @@ export type TMenu = HydratedDocument<{
 	veg: TVeg;
 	image: string;
 	hidden: boolean;
+	customization?: {
+		enabled?: boolean;
+		sweetness?: { enabled?: boolean; defaultLevel?: TModifierLevel };
+		ice?: { enabled?: boolean; defaultLevel?: TModifierLevel };
+		milkOptions?: string[];
+		defaultMilk?: string;
+		flavorOptions?: string[];
+		defaultFlavors?: Array<{ name: string; level: TModifierLevel }>;
+	};
 }>;
 
 export type TFoodType = (typeof FoodType)[number];
 export type TVeg = (typeof Veg)[number];
+export type TModifierLevel = (typeof ModifierLevel)[number];

@@ -30,6 +30,7 @@ export async function GET() {
 						...product,
 						...menu,
 						product: menu?._id,
+						selectedCustomization: product?.selectedCustomization,
 					};
 				});
 				return { ...order, products: products as unknown as TProduct[] };

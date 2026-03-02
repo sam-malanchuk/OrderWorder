@@ -8,12 +8,6 @@ import type { TMenu } from "#utils/database/models/menu";
 
 import "./menuCard.scss";
 
-const vegIcon = {
-	veg: "f4d8",
-	"non-veg": "f6d6",
-	"contains-egg": "f7fb",
-} as const;
-
 const MenuCard = (props: TMenuCardProps) => {
 	const { className, show, restrictOrder, showInfo, setShowInfo, item, quantity } = props;
 	const [cardRef, inView] = useInView({ threshold: 0 });
@@ -60,12 +54,6 @@ const MenuCard = (props: TMenuCardProps) => {
 						<div className="picture">
 							<span style={{ background: `url(${item.image})` }} />
 							<div className="description">{item.description}</div>
-						</div>
-					)}
-					{item.veg && (
-						<div className={`vegIcon ${item.veg}`}>
-							<Icon className="icon" type="solid" size={16} code={vegIcon[item.veg]} />
-							<span className="label">{item.veg.replace(/-/g, " ")}</span>
 						</div>
 					)}
 					<div className="options">

@@ -12,7 +12,7 @@ import { fetcher } from "#utils/helper/common";
 const OrderDefault: TOrderInitialType = {
 	order: undefined,
 	loading: false,
-	placeOrder: () => new Promise(noop),
+	placeOrder: async () => false,
 	placingOrder: false,
 	cancelOrder: noop,
 	cancelingOrder: false,
@@ -35,7 +35,7 @@ export const OrderProvider = ({ children }: TOrderProviderProps) => {
 		const req = await fetch("/api/order/place", {
 			method: "POST",
 			body: JSON.stringify({
-				products: products.map((product) => pick(product, ["_id", "quantity"])),
+				products: products.map((product) => pick(product, ["_id", "quantity", "selectedCustomization"])),
 			}),
 		});
 		const res = await req.json();
@@ -43,6 +43,8 @@ export const OrderProvider = ({ children }: TOrderProviderProps) => {
 		if (!req.ok) toast.error(res?.message);
 		await mutate();
 		setPlacingOrder(false);
+
+		return req.ok;
 	};
 	const cancelOrder = async () => {
 		setCancelingOrder(true);
@@ -72,11 +74,19 @@ export type TOrderProviderProps = {
 export type TOrderInitialType = {
 	order?: TOrder;
 	loading: boolean;
-	placeOrder: (products: Array<TMenuCustom>) => Promise<void>;
+	placeOrder: (products: Array<TMenuCustom>) => Promise<boolean>;
 	placingOrder: boolean;
 	cancelOrder: () => void;
 	cancelingOrder: boolean;
 	loginOpen: boolean;
 	setLoginOpen: (open: boolean) => void;
 };
-type TMenuCustom = TMenu & { quantity: number };
+type TMenuCustom = TMenu & {
+	quantity: number;
+	selectedCustomization?: {
+		sweetness?: "none" | "lite" | "reg" | "extra";
+		ice?: "none" | "lite" | "reg" | "extra";
+		milk?: string;
+		flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
+	};
+};

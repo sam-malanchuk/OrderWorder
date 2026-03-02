@@ -26,6 +26,16 @@ const ItemCard = (props: TItemCardProps) => {
 					)}
 					<div className="options">
 						<p className="title">{item.name}</p>
+						{item.selectedCustomization && (
+							<p className="subtitle">
+								{item.selectedCustomization.sweetness ? `Sweetness: ${item.selectedCustomization.sweetness}` : ""}
+								{item.selectedCustomization.ice ? ` • Ice: ${item.selectedCustomization.ice}` : ""}
+								{item.selectedCustomization.milk ? ` • Milk: ${item.selectedCustomization.milk}` : ""}
+								{item.selectedCustomization.flavors?.length
+									? ` • Flavors: ${item.selectedCustomization.flavors.map((f) => `${f.name} (${f.level})`).join(", ")}`
+									: ""}
+							</p>
+						)}
 						<div className="footer">
 							<div className="price">
 								{!staticCard && <p className="rupee">{getTotalPrice()}</p>}
@@ -63,4 +73,12 @@ type TItemCardProps = {
 	decreaseQuantity?: (item: TMenuCustom) => void;
 };
 
-type TMenuCustom = TMenu & { quantity: number };
+type TMenuCustom = TMenu & {
+	quantity: number;
+	selectedCustomization?: {
+		sweetness?: "none" | "lite" | "reg" | "extra";
+		ice?: "none" | "lite" | "reg" | "extra";
+		milk?: string;
+		flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
+	};
+};
