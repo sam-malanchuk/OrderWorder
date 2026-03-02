@@ -84,7 +84,9 @@ export type TOrderInitialType = {
 type TMenuCustom = TMenu & {
 	quantity: number;
 	selectedCustomization?: {
-		size?: string;
-		addOns?: Array<{ name: string; level: "light" | "regular" | "extra" }>;
+		sweetness?: "none" | "lite" | "reg" | "extra";
+		ice?: "none" | "lite" | "reg" | "extra";
+		milk?: string;
+		flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
 	};
 };

@@ -1,7 +1,7 @@
 import mongoose, { type HydratedDocument } from "mongoose";
 
 import type { TCustomer } from "./customer";
-import type { TMenu } from "./menu";
+import type { TMenu, TModifierLevel } from "./menu";
 
 const orderState = ["active", "reject", "cancel", "complete"] as const;
 const OrderSchema = new mongoose.Schema<TOrder>(
@@ -16,6 +16,17 @@ const OrderSchema = new mongoose.Schema<TOrder>(
 			{
 				product: { type: mongoose.Schema.Types.ObjectId, ref: "menus" },
 				quantity: { type: Number, default: 1 },
+				selectedCustomization: {
+					sweetness: { type: String, trim: true, lowercase: true },
+					ice: { type: String, trim: true, lowercase: true },
+					milk: { type: String, trim: true },
+					flavors: [
+						{
+							name: { type: String, trim: true },
+							level: { type: String, trim: true, lowercase: true },
+						},
+					],
+				},
 				price: { type: Number, required: true },
 				tax: { type: Number, required: true },
 				adminApproved: { type: Boolean, default: false },
@@ -50,6 +61,12 @@ export type TProduct = TMenu & {
 	_id: mongoose.Types.ObjectId;
 	product: TMenu;
 	quantity: number;
+	selectedCustomization?: {
+		sweetness?: TModifierLevel;
+		ice?: TModifierLevel;
+		milk?: string;
+		flavors?: Array<{ name: string; level: TModifierLevel }>;
+	};
 	price: number;
 	tax: number;
 	fulfilled: boolean;

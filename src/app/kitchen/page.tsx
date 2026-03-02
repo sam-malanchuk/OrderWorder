@@ -12,13 +12,22 @@ import "./kitchen.scss";
 
 type TKitchenOrder = {
 	_id: string;
-	table: string;
 	customer: {
 		fname: string;
 		lname: string;
 	};
 	state: "active" | "reject" | "cancel" | "complete";
-	products: Array<{ adminApproved: boolean }>;
+	products: Array<{
+		name: string;
+		quantity: number;
+		adminApproved: boolean;
+		selectedCustomization?: {
+			sweetness?: "none" | "lite" | "reg" | "extra";
+			ice?: "none" | "lite" | "reg" | "extra";
+			milk?: string;
+			flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
+		};
+	}>;
 };
 
 const Kitchen = () => {
@@ -51,6 +60,22 @@ const Kitchen = () => {
 		const req = await fetch("/api/admin/order/action", { method: "POST", body: JSON.stringify({ orderID, action }) });
 		if (req.ok) await mutate();
 	};
+	const itemSummary = (order: TKitchenOrder) => {
+		return order.products
+			.map((product) => {
+				const flavors = product.selectedCustomization?.flavors?.map((flavor) => `${flavor.name} (${flavor.level})`).join(", ");
+				const details = [
+					product.selectedCustomization?.sweetness ? `Sweetness: ${product.selectedCustomization.sweetness}` : null,
+					product.selectedCustomization?.ice ? `Ice: ${product.selectedCustomization.ice}` : null,
+					product.selectedCustomization?.milk ? `Milk: ${product.selectedCustomization.milk}` : null,
+					flavors ? `Flavors: ${flavors}` : null,
+				]
+					.filter(Boolean)
+					.join(" • ");
+				return `${product.name} x${product.quantity}${details ? ` — ${details}` : ""}`;
+			})
+			.join(" | ");
+	};
 
 	if (session.status === "loading" || (isLoading && !data)) return <Spinner fullpage label="Loading kitchen screen..." />;
 
@@ -69,7 +94,7 @@ const Kitchen = () => {
 							<div className="orderCard" key={order._id.toString()}>
 								<div>
 									<p className="name">{`${order?.customer?.fname} ${order?.customer?.lname}`}</p>
-									<p className="table">Table {order.table}</p>
+									<p className="table">{itemSummary(order)}</p>
 								</div>
 								<Button size="mini" icon="f00c" iconType="solid" label="Accept" onClick={() => orderAction(order._id, "accept")} />
 							</div>
@@ -84,7 +109,7 @@ const Kitchen = () => {
 							<div className="orderCard" key={order._id.toString()}>
 								<div>
 									<p className="name">{`${order?.customer?.fname} ${order?.customer?.lname}`}</p>
-									<p className="table">Table {order.table}</p>
+									<p className="table">{itemSummary(order)}</p>
 								</div>
 								<Button
 									size="mini"

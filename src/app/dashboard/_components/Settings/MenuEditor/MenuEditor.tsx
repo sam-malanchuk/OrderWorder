@@ -75,6 +75,40 @@ const MenuEditor = () => {
 
 		const foodType = window.prompt("Food type (spicy, extra-spicy, sweet) - optional", item?.foodType ?? "") ?? "";
 		const image = window.prompt("Image URL (optional)", item?.image ?? "") ?? "";
+		const customizationEnabled =
+			(window.prompt("Enable customizations? (yes/no)", item?.customization?.enabled ? "yes" : "no") ?? "no").trim().toLowerCase() === "yes";
+		const sweetnessEnabled = customizationEnabled
+			? (window.prompt("Enable sweetness modifier? (yes/no)", item?.customization?.sweetness?.enabled ? "yes" : "no") ?? "no").trim().toLowerCase() === "yes"
+			: false;
+		const sweetnessDefault = sweetnessEnabled
+			? (window.prompt("Sweetness default (none/lite/reg/extra)", item?.customization?.sweetness?.defaultLevel ?? "reg") ?? "reg").trim().toLowerCase()
+			: "reg";
+		const iceEnabled = customizationEnabled
+			? (window.prompt("Enable ice modifier? (yes/no)", item?.customization?.ice?.enabled ? "yes" : "no") ?? "no").trim().toLowerCase() === "yes"
+			: false;
+		const iceDefault = iceEnabled
+			? (window.prompt("Ice default (none/lite/reg/extra)", item?.customization?.ice?.defaultLevel ?? "reg") ?? "reg").trim().toLowerCase()
+			: "reg";
+		const milkOptionsInput = customizationEnabled
+			? (window.prompt("Milk options comma-separated", item?.customization?.milkOptions?.join(", ") ?? "2% milk, almond milk, whole milk, skim milk") ?? "")
+			: "";
+		const flavorOptionsInput = customizationEnabled
+			? (window.prompt("Flavor options comma-separated", item?.customization?.flavorOptions?.join(", ") ?? "caramel") ?? "")
+			: "";
+		const defaultMilk = customizationEnabled ? (window.prompt("Default milk option", item?.customization?.defaultMilk ?? "") ?? "") : "";
+
+		const milkOptions = milkOptionsInput
+			.split(",")
+			.map((v) => v.trim())
+			.filter(Boolean);
+		const flavorOptions = flavorOptionsInput
+			.split(",")
+			.map((v) => v.trim())
+			.filter(Boolean);
+		const defaultFlavors = flavorOptions.map((name) => {
+			const level = (window.prompt(`Default level for ${name} (none/lite/reg/extra)`, "reg") ?? "reg").trim().toLowerCase();
+			return { name, level };
+		});
 
 		const req = await fetch("/api/admin/menu", {
 			method: "POST",
@@ -89,6 +123,15 @@ const MenuEditor = () => {
 				foodType,
 				image,
 				hidden: item?.hidden ?? false,
+				customization: {
+					enabled: customizationEnabled,
+					sweetness: { enabled: sweetnessEnabled, defaultLevel: sweetnessDefault },
+					ice: { enabled: iceEnabled, defaultLevel: iceDefault },
+					milkOptions,
+					defaultMilk,
+					flavorOptions,
+					defaultFlavors,
+				},
 			}),
 		});
 		const res = await req.json();
