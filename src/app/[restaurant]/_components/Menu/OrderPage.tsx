@@ -39,6 +39,9 @@ const OrderPage = () => {
 	const [leftCategoryScroll, setLeftCategoryScroll] = useState(false);
 	const [rightCategoryScroll, setRightCategoryScroll] = useState(true);
 	const [showInfoCard, setShowInfoCard] = useState(false);
+	const [customizationOpen, setCustomizationOpen] = useState(false);
+	const [customizationItem, setCustomizationItem] = useState<TMenuCustom>();
+	const [customizationDraft, setCustomizationDraft] = useState<TCustomizationDraft>({ flavors: [] });
 
 	const [filteredProducts, setFilteredProducts] = useState<Array<TMenuCustom>>(menus);
 	const [selectedProducts, setSelectedProducts] = useState<Array<TMenuCustom>>([]);
@@ -84,58 +87,7 @@ const OrderPage = () => {
 		if (table) return setLoginOpen(true);
 		return params.router.push("/scan");
 	};
-	const promptCustomization = (product: TMenuCustom): TMenuCustom["selectedCustomization"] | undefined => {
-		if (!product.customization?.enabled) return undefined;
-
-		const levels: TModifierLevel[] = ["none", "lite", "reg", "extra"];
-		const selectedCustomization: TMenuCustom["selectedCustomization"] = {
-			flavors: [],
-		};
-
-		if (product.customization.sweetness?.enabled) {
-			const value =
-				window
-					.prompt("Sweetness (none/lite/reg/extra)", product.customization.sweetness.defaultLevel ?? "reg")
-					?.trim()
-					.toLowerCase() ?? "reg";
-			selectedCustomization.sweetness = levels.includes(value as TModifierLevel) ? (value as TModifierLevel) : "reg";
-		}
-
-		if (product.customization.ice?.enabled) {
-			const value =
-				window
-					.prompt("Ice (none/lite/reg/extra)", product.customization.ice.defaultLevel ?? "reg")
-					?.trim()
-					.toLowerCase() ?? "reg";
-			selectedCustomization.ice = levels.includes(value as TModifierLevel) ? (value as TModifierLevel) : "reg";
-		}
-
-		const milkOptions = product.customization.milkOptions?.filter(Boolean) ?? [];
-		if (milkOptions.length) {
-			const value = window.prompt(`Milk option (${milkOptions.join(", ")})`, product.customization.defaultMilk ?? milkOptions[0])?.trim();
-			if (value && milkOptions.includes(value)) selectedCustomization.milk = value;
-		}
-
-		const flavorOptions = product.customization.flavorOptions?.filter(Boolean) ?? [];
-		if (flavorOptions.length) {
-			const selectedFlavorList = window
-				.prompt(`Flavors comma separated (${flavorOptions.join(", ")})`, "")
-				?.split(",")
-				.map((v) => v.trim())
-				.filter((v) => flavorOptions.includes(v));
-
-			(selectedFlavorList ?? []).forEach((flavorName) => {
-				const defaultLevel = product.customization?.defaultFlavors?.find((f) => f.name === flavorName)?.level ?? "reg";
-				const levelInput = window.prompt(`${flavorName} level (none/lite/reg/extra)`, defaultLevel)?.trim().toLowerCase() ?? defaultLevel;
-				const level = levels.includes(levelInput as TModifierLevel) ? (levelInput as TModifierLevel) : defaultLevel;
-				selectedCustomization.flavors?.push({ name: flavorName, level });
-			});
-		}
-
-		return selectedCustomization;
-	};
-	const increaseProductQuantity = (product: TMenuCustom) => {
-		const selectedCustomization = promptCustomization(product);
+	const addItemToSelection = (product: TMenuCustom, selectedCustomization?: TCustomizationDraft) => {
 		const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
 		const cartKey = `${product._id.toString()}-${selectedCustomization?.sweetness ?? ""}-${selectedCustomization?.ice ?? ""}-${selectedCustomization?.milk ?? ""}-${flavorKey}`;
 		const selection = [...selectedProducts];
@@ -147,6 +99,18 @@ const OrderPage = () => {
 			selection.push({ ...product, quantity: 1, selectedCustomization, cartKey } as unknown as TMenuCustom);
 		}
 		setSelectedProducts(selection);
+	};
+	const increaseProductQuantity = (product: TMenuCustom) => {
+		if (!product.customization?.enabled) return addItemToSelection(product);
+
+		setCustomizationItem(product);
+		setCustomizationDraft({
+			sweetness: product.customization?.sweetness?.enabled ? product.customization.sweetness.defaultLevel : undefined,
+			ice: product.customization?.ice?.enabled ? product.customization.ice.defaultLevel : undefined,
+			milk: product.customization?.defaultMilk,
+			flavors: product.customization?.defaultFlavors ?? [],
+		});
+		setCustomizationOpen(true);
 	};
 	const decreaseProductQuantity = (product: TMenuCustom) => {
 		let selection = [...selectedProducts];
@@ -198,6 +162,14 @@ const OrderPage = () => {
 	useEffect(() => {
 		if (session.status === "authenticated" && session.data?.restaurant?.username !== restaurant?.username) signOut();
 	}, [restaurant?.username, session.data?.restaurant?.username, session.status]);
+
+	const levelOptions: TModifierLevel[] = ["none", "lite", "reg", "extra"];
+	const onCustomizationConfirm = () => {
+		if (!customizationItem) return;
+		addItemToSelection(customizationItem, customizationDraft);
+		setCustomizationOpen(false);
+		setCustomizationItem(undefined);
+	};
 
 	return (
 		<div className="orderPage">
@@ -323,19 +295,84 @@ const OrderPage = () => {
 			<Modal open={loginOpen} setOpen={setLoginOpen}>
 				<UserLogin setOpen={setLoginOpen} />
 			</Modal>
+			<Modal open={customizationOpen} setOpen={setCustomizationOpen}>
+				<div className="customizationModal">
+					<h3>{customizationItem?.name} Customizations</h3>
+					<div className="customizationGrid">
+						{customizationItem?.customization?.sweetness?.enabled && (
+							<select
+								value={customizationDraft.sweetness ?? "reg"}
+								onChange={(e) => setCustomizationDraft((v) => ({ ...v, sweetness: e.target.value as TModifierLevel }))}>
+								{levelOptions.map((level) => (
+									<option key={level} value={level}>{`Sweetness: ${level}`}</option>
+								))}
+							</select>
+						)}
+						{customizationItem?.customization?.ice?.enabled && (
+							<select
+								value={customizationDraft.ice ?? "reg"}
+								onChange={(e) => setCustomizationDraft((v) => ({ ...v, ice: e.target.value as TModifierLevel }))}>
+								{levelOptions.map((level) => (
+									<option key={level} value={level}>{`Ice: ${level}`}</option>
+								))}
+							</select>
+						)}
+						{(customizationItem?.customization?.milkOptions?.length ?? 0) > 0 && (
+							<select value={customizationDraft.milk ?? ""} onChange={(e) => setCustomizationDraft((v) => ({ ...v, milk: e.target.value }))}>
+								{customizationItem?.customization?.milkOptions?.map((milk) => (
+									<option key={milk} value={milk}>{`Milk: ${milk}`}</option>
+								))}
+							</select>
+						)}
+						{(customizationItem?.customization?.flavorOptions?.length ?? 0) > 0 && (
+							<div className="flavorRows">
+								{customizationItem?.customization?.flavorOptions?.map((flavor) => {
+									const current = customizationDraft.flavors?.find((f) => f.name === flavor);
+									return (
+										<div className="flavorRow" key={flavor}>
+											<span>{flavor}</span>
+											<select
+												value={current?.level ?? "none"}
+												onChange={(e) => {
+													const level = e.target.value as TModifierLevel;
+													setCustomizationDraft((v) => {
+														const flavors = [...(v.flavors ?? [])].filter((f) => f.name !== flavor);
+														if (level !== "none") flavors.push({ name: flavor, level });
+														return { ...v, flavors };
+													});
+												}}>
+												{levelOptions.map((level) => (
+													<option key={level} value={level}>
+														{level}
+													</option>
+												))}
+											</select>
+										</div>
+									);
+								})}
+							</div>
+						)}
+					</div>
+					<div className="customizationAction">
+						<Button label="Add item" onClick={onCustomizationConfirm} />
+					</div>
+				</div>
+			</Modal>
 		</div>
 	);
 };
 
 export default OrderPage;
 
+type TCustomizationDraft = {
+	sweetness?: TModifierLevel;
+	ice?: TModifierLevel;
+	milk?: string;
+	flavors?: Array<{ name: string; level: TModifierLevel }>;
+};
+
 type TMenuCustom = TMenu & {
 	quantity: number;
 	cartKey?: string;
-	selectedCustomization?: {
-		sweetness?: TModifierLevel;
-		ice?: TModifierLevel;
-		milk?: string;
-		flavors?: Array<{ name: string; level: TModifierLevel }>;
-	};
+	selectedCustomization?: TCustomizationDraft;
 };

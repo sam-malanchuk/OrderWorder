@@ -129,6 +129,49 @@
 	}
 }
 
+.menuForm {
+	width: min(760px, 92vw);
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+
+	h2 {
+		margin: 0;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+
+		input, select {
+			height: 40px;
+			border: 1px solid var(--colorBorder);
+			border-radius: 10px;
+			padding: 0 10px;
+			background: var(--colorBackgroundPrimary);
+			color: var(--colorContentPrimary);
+		}
+
+		.check {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+	}
+
+	.toggleLine {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+}
+
 @media (width <= 750px) {
 	.menuEditor {
 		.menuCategoryEditor {

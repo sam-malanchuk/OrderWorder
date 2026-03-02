@@ -20,6 +20,7 @@ const CartPage = (props: TCartPageProps) => {
 	const params = useSearchParams();
 	const pathname = usePathname();
 	const table = params.get("table");
+	const queryString = params.toString();
 	const { order, placeOrder, placingOrder, cancelOrder, cancelingOrder } = useOrder();
 	const [showOrderHistory, setShowOrderHistory] = useState(false);
 	const [selectionTotal, setSelectionTotal] = useState(0);
@@ -41,7 +42,7 @@ const CartPage = (props: TCartPageProps) => {
 		const placed = await placeOrder(selectedProducts);
 		resetSelectedProducts();
 
-		if (placed) await signOut({ redirect: true, callbackUrl: pathname });
+		if (placed) await signOut({ redirect: true, callbackUrl: queryString ? `${pathname}?${queryString}` : pathname });
 	};
 	const onCancelOrder = async () => {
 		await cancelOrder();

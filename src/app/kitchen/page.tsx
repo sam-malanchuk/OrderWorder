@@ -60,22 +60,6 @@ const Kitchen = () => {
 		const req = await fetch("/api/admin/order/action", { method: "POST", body: JSON.stringify({ orderID, action }) });
 		if (req.ok) await mutate();
 	};
-	const itemSummary = (order: TKitchenOrder) => {
-		return order.products
-			.map((product) => {
-				const flavors = product.selectedCustomization?.flavors?.map((flavor) => `${flavor.name} (${flavor.level})`).join(", ");
-				const details = [
-					product.selectedCustomization?.sweetness ? `Sweetness: ${product.selectedCustomization.sweetness}` : null,
-					product.selectedCustomization?.ice ? `Ice: ${product.selectedCustomization.ice}` : null,
-					product.selectedCustomization?.milk ? `Milk: ${product.selectedCustomization.milk}` : null,
-					flavors ? `Flavors: ${flavors}` : null,
-				]
-					.filter(Boolean)
-					.join(" • ");
-				return `${product.name} x${product.quantity}${details ? ` — ${details}` : ""}`;
-			})
-			.join(" | ");
-	};
 
 	if (session.status === "loading" || (isLoading && !data)) return <Spinner fullpage label="Loading kitchen screen..." />;
 
@@ -94,7 +78,21 @@ const Kitchen = () => {
 							<div className="orderCard" key={order._id.toString()}>
 								<div>
 									<p className="name">{`${order?.customer?.fname} ${order?.customer?.lname}`}</p>
-									<p className="table">{itemSummary(order)}</p>
+									<div className="itemsSummary">
+										{order.products.map((product, idx) => (
+											<div key={idx} className="itemLine">
+												<p className="itemName">{`${product.name} x${product.quantity}`}</p>
+												<div className="modifiers">
+													{product.selectedCustomization?.sweetness && <span>{`Sweetness: ${product.selectedCustomization.sweetness}`}</span>}
+													{product.selectedCustomization?.ice && <span>{`Ice: ${product.selectedCustomization.ice}`}</span>}
+													{product.selectedCustomization?.milk && <span>{`Milk: ${product.selectedCustomization.milk}`}</span>}
+													{product.selectedCustomization?.flavors?.map((flavor, flavorIdx) => (
+														<span key={flavorIdx}>{`${flavor.name}: ${flavor.level}`}</span>
+													))}
+												</div>
+											</div>
+										))}
+									</div>
 								</div>
 								<Button size="mini" icon="f00c" iconType="solid" label="Accept" onClick={() => orderAction(order._id, "accept")} />
 							</div>
@@ -109,7 +107,21 @@ const Kitchen = () => {
 							<div className="orderCard" key={order._id.toString()}>
 								<div>
 									<p className="name">{`${order?.customer?.fname} ${order?.customer?.lname}`}</p>
-									<p className="table">{itemSummary(order)}</p>
+									<div className="itemsSummary">
+										{order.products.map((product, idx) => (
+											<div key={idx} className="itemLine">
+												<p className="itemName">{`${product.name} x${product.quantity}`}</p>
+												<div className="modifiers">
+													{product.selectedCustomization?.sweetness && <span>{`Sweetness: ${product.selectedCustomization.sweetness}`}</span>}
+													{product.selectedCustomization?.ice && <span>{`Ice: ${product.selectedCustomization.ice}`}</span>}
+													{product.selectedCustomization?.milk && <span>{`Milk: ${product.selectedCustomization.milk}`}</span>}
+													{product.selectedCustomization?.flavors?.map((flavor, flavorIdx) => (
+														<span key={flavorIdx}>{`${flavor.name}: ${flavor.level}`}</span>
+													))}
+												</div>
+											</div>
+										))}
+									</div>
 								</div>
 								<Button
 									size="mini"
