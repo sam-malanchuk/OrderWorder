@@ -10,6 +10,7 @@ import "./userLogin.scss";
 const UserLogin = ({ setOpen }: UserLoginProps) => {
 	const pathname = usePathname();
 	const params = useSearchParams();
+	const table = params.get("table") ?? "1";
 	const [buttonLabel, setButtonLabel] = useState("Order");
 	const [busy, setBusy] = useState(false);
 
@@ -18,7 +19,6 @@ const UserLogin = ({ setOpen }: UserLoginProps) => {
 	const [heading, setHeading] = useState(["Let's", " start ordering"]);
 
 	const onNext = async () => {
-		if (!params.get("table")) return toast.error("Please scan the QR Code");
 		if (!fname.trim()) return toast.error("Please enter your first name");
 		if (!lname.trim()) return toast.error("Please enter your last name");
 
@@ -29,7 +29,7 @@ const UserLogin = ({ setOpen }: UserLoginProps) => {
 			restaurant: pathname.replaceAll("/", ""),
 			fname,
 			lname,
-			table: params.get("table"),
+			table,
 			callbackUrl: `${window.location.origin}`,
 		});
 

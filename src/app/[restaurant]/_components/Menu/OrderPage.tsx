@@ -21,7 +21,7 @@ const OrderPage = () => {
 
 	const menus = restaurant?.menus as Array<TMenuCustom>;
 	const params = useQueryParams();
-	const table = params.get("table");
+	const table = params.get("table") ?? "1";
 	const searchParam = params.get("search")?.trim() ?? "";
 	const categoryParam = params.get("category")?.trim();
 	const category = useMemo(() => (categoryParam ? categoryParam.split(",") : []), [categoryParam]);
@@ -84,8 +84,7 @@ const OrderPage = () => {
 		params.set({ category: newCategory.join(",") });
 	};
 	const onLoginClick = () => {
-		if (table) return setLoginOpen(true);
-		return params.router.push("/scan");
+		setLoginOpen(true);
 	};
 	const addItemToSelection = (product: TMenuCustom, selectedCustomization?: TCustomizationDraft) => {
 		const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
@@ -129,6 +128,10 @@ const OrderPage = () => {
 	};
 
 	useEffect(() => {
+		if (!params.get("table")) params.set({ table: "1" });
+	}, [params]);
+
+	useEffect(() => {
 		const search = searchParam.toLowerCase();
 
 		setFilteredProducts(
@@ -164,6 +167,7 @@ const OrderPage = () => {
 	}, [restaurant?.username, session.data?.restaurant?.username, session.status]);
 
 	const levelOptions: TModifierLevel[] = ["none", "lite", "reg", "extra"];
+	const levelLabel: Record<TModifierLevel, string> = { none: "None", lite: "Light", reg: "Regular", extra: "Extra" };
 	const onCustomizationConfirm = () => {
 		if (!customizationItem) return;
 		addItemToSelection(customizationItem, customizationDraft);
@@ -300,29 +304,52 @@ const OrderPage = () => {
 					<h3>{customizationItem?.name} Customizations</h3>
 					<div className="customizationGrid">
 						{customizationItem?.customization?.sweetness?.enabled && (
-							<select
-								value={customizationDraft.sweetness ?? "reg"}
-								onChange={(e) => setCustomizationDraft((v) => ({ ...v, sweetness: e.target.value as TModifierLevel }))}>
-								{levelOptions.map((level) => (
-									<option key={level} value={level}>{`Sweetness: ${level}`}</option>
-								))}
-							</select>
+							<div className="customizationField">
+								<span className="label">Sweetness</span>
+								<div className="choiceGroup">
+									{levelOptions.map((level) => (
+										<button
+											key={level}
+											type="button"
+											className={customizationDraft.sweetness === level || (!customizationDraft.sweetness && level === "reg") ? "active" : ""}
+											onClick={() => setCustomizationDraft((v) => ({ ...v, sweetness: level }))}>
+											{levelLabel[level]}
+										</button>
+									))}
+								</div>
+							</div>
 						)}
 						{customizationItem?.customization?.ice?.enabled && (
-							<select
-								value={customizationDraft.ice ?? "reg"}
-								onChange={(e) => setCustomizationDraft((v) => ({ ...v, ice: e.target.value as TModifierLevel }))}>
-								{levelOptions.map((level) => (
-									<option key={level} value={level}>{`Ice: ${level}`}</option>
-								))}
-							</select>
+							<div className="customizationField">
+								<span className="label">Ice</span>
+								<div className="choiceGroup">
+									{levelOptions.map((level) => (
+										<button
+											key={level}
+											type="button"
+											className={customizationDraft.ice === level || (!customizationDraft.ice && level === "reg") ? "active" : ""}
+											onClick={() => setCustomizationDraft((v) => ({ ...v, ice: level }))}>
+											{levelLabel[level]}
+										</button>
+									))}
+								</div>
+							</div>
 						)}
 						{(customizationItem?.customization?.milkOptions?.length ?? 0) > 0 && (
-							<select value={customizationDraft.milk ?? ""} onChange={(e) => setCustomizationDraft((v) => ({ ...v, milk: e.target.value }))}>
-								{customizationItem?.customization?.milkOptions?.map((milk) => (
-									<option key={milk} value={milk}>{`Milk: ${milk}`}</option>
-								))}
-							</select>
+							<div className="customizationField">
+								<span className="label">Milk</span>
+								<div className="choiceGroup">
+									{customizationItem?.customization?.milkOptions?.map((milk, i) => (
+										<button
+											key={milk}
+											type="button"
+											className={customizationDraft.milk === milk || (!customizationDraft.milk && i === 0) ? "active" : ""}
+											onClick={() => setCustomizationDraft((v) => ({ ...v, milk }))}>
+											{milk}
+										</button>
+									))}
+								</div>
+							</div>
 						)}
 						{(customizationItem?.customization?.flavorOptions?.length ?? 0) > 0 && (
 							<div className="flavorRows">
@@ -331,22 +358,23 @@ const OrderPage = () => {
 									return (
 										<div className="flavorRow" key={flavor}>
 											<span>{flavor}</span>
-											<select
-												value={current?.level ?? "none"}
-												onChange={(e) => {
-													const level = e.target.value as TModifierLevel;
-													setCustomizationDraft((v) => {
-														const flavors = [...(v.flavors ?? [])].filter((f) => f.name !== flavor);
-														if (level !== "none") flavors.push({ name: flavor, level });
-														return { ...v, flavors };
-													});
-												}}>
+											<div className="choiceGroup">
 												{levelOptions.map((level) => (
-													<option key={level} value={level}>
-														{level}
-													</option>
+													<button
+														key={level}
+														type="button"
+														className={current?.level === level || (!current?.level && level === "none") ? "active" : ""}
+														onClick={() => {
+															setCustomizationDraft((v) => {
+																const flavors = [...(v.flavors ?? [])].filter((f) => f.name !== flavor);
+																if (level !== "none") flavors.push({ name: flavor, level });
+																return { ...v, flavors };
+															});
+														}}>
+														{levelLabel[level]}
+													</button>
 												))}
-											</select>
+											</div>
 										</div>
 									);
 								})}

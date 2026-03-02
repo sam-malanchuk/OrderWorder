@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button, Lottie } from "xtreme-ui";
@@ -19,6 +19,7 @@ const CartPage = (props: TCartPageProps) => {
 	const { selectedProducts, increaseProductQuantity, decreaseProductQuantity, resetSelectedProducts } = props;
 	const params = useSearchParams();
 	const pathname = usePathname();
+	const router = useRouter();
 	const table = params.get("table");
 	const queryString = params.toString();
 	const { order, placeOrder, placingOrder, cancelOrder, cancelingOrder } = useOrder();
@@ -42,7 +43,10 @@ const CartPage = (props: TCartPageProps) => {
 		const placed = await placeOrder(selectedProducts);
 		resetSelectedProducts();
 
-		if (placed) await signOut({ redirect: true, callbackUrl: queryString ? `${pathname}?${queryString}` : pathname });
+		if (placed) {
+			await signOut({ redirect: false });
+			router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+		}
 	};
 	const onCancelOrder = async () => {
 		await cancelOrder();
@@ -63,11 +67,12 @@ const CartPage = (props: TCartPageProps) => {
 	useEffect(() => {
 		const cancelAndSignout = async () => {
 			await cancelOrder();
-			signOut();
+			await signOut({ redirect: false });
+			router.replace(pathname);
 		};
 
 		if (order?.table && order?.table !== table) cancelAndSignout();
-	}, [cancelOrder, order, table]);
+	}, [cancelOrder, order, pathname, router, table]);
 
 	// useEffect(() => {
 	// 	if (userOrderEnd) {

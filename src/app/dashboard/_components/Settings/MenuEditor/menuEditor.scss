@@ -158,6 +158,36 @@
 			align-items: center;
 			gap: 8px;
 		}
+
+		.choiceGroup {
+			display: flex;
+			min-height: 40px;
+			border: 1px solid var(--colorBorder);
+			border-radius: 10px;
+			overflow: hidden;
+			background: var(--colorBackgroundPrimary);
+
+			button {
+				flex: 1;
+				border: 0;
+				border-right: 1px solid var(--colorBorder);
+				background: transparent;
+				color: var(--colorContentPrimary);
+				cursor: pointer;
+				font-size: 12px;
+				padding: 0 8px;
+
+				&:last-child {
+					border-right: 0;
+				}
+
+				&.active {
+					background: hsl(var(--colorBrandPrimary) / 0.16);
+					font-variation-settings: 'wdth' 75, 'wght' 600;
+				}
+			}
+		}
+
 	}
 
 	.toggleLine {

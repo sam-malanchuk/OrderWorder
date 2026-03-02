@@ -13,21 +13,7 @@ export default function Navbar({ menuOpen, setMenuOpen }: TNavBarProps) {
 					<span className="line1" />
 					<span className="line2" />
 				</div>
-				<div className="container">
-					{["About Us", "Features"].map((item, key) => {
-						return (
-							<div
-								key={key}
-								className="item"
-								onClick={() => {
-									scrollToSection(`homepage-${item.toLowerCase().replace(/ /g, "")}`);
-									setMenuOpen(false);
-								}}>
-								<p>{item}</p>
-							</div>
-						);
-					})}
-				</div>
+				<div className="container" />
 				<ThemeSelect size="mini" withSwatch withScheme />
 			</div>
 		</div>
