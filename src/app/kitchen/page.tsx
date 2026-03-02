@@ -5,8 +5,8 @@ import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { Button, Spinner } from "xtreme-ui";
-
 import Modal from "#components/layout/Modal";
+import type { TTemperatureOption } from "#utils/database/models/menu";
 import { fetcher } from "#utils/helper/common";
 
 import "./kitchen.scss";
@@ -23,6 +23,7 @@ type TKitchenOrder = {
 		selectedCustomization?: {
 			sweetness?: "none" | "lite" | "reg" | "extra";
 			ice?: "none" | "lite" | "reg" | "extra";
+			temperature?: TTemperatureOption;
 			milk?: string;
 			flavors?: Array<{ name: string; level: "none" | "lite" | "reg" | "extra" }>;
 		};
@@ -113,6 +114,7 @@ const Kitchen = () => {
 												<div className="modifiers">
 													{product.selectedCustomization?.sweetness && <span>{`Sweetness: ${product.selectedCustomization.sweetness}`}</span>}
 													{product.selectedCustomization?.ice && <span>{`Ice: ${product.selectedCustomization.ice}`}</span>}
+													{product.selectedCustomization?.temperature && <span>{`Temp: ${product.selectedCustomization.temperature}`}</span>}
 													{product.selectedCustomization?.milk && <span>{`Milk: ${product.selectedCustomization.milk}`}</span>}
 													{product.selectedCustomization?.flavors?.map((flavor, flavorIdx) => (
 														<span key={flavorIdx}>{`${flavor.name}: ${flavor.level}`}</span>
@@ -148,6 +150,7 @@ const Kitchen = () => {
 												<div className="modifiers">
 													{product.selectedCustomization?.sweetness && <span>{`Sweetness: ${product.selectedCustomization.sweetness}`}</span>}
 													{product.selectedCustomization?.ice && <span>{`Ice: ${product.selectedCustomization.ice}`}</span>}
+													{product.selectedCustomization?.temperature && <span>{`Temp: ${product.selectedCustomization.temperature}`}</span>}
 													{product.selectedCustomization?.milk && <span>{`Milk: ${product.selectedCustomization.milk}`}</span>}
 													{product.selectedCustomization?.flavors?.map((flavor, flavorIdx) => (
 														<span key={flavorIdx}>{`${flavor.name}: ${flavor.level}`}</span>

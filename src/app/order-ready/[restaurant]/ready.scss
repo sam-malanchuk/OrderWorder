@@ -1,8 +1,8 @@
 .orderReadyBoard {
 	min-height: 100vh;
 	padding: 2rem;
-	background: radial-gradient(circle at top, #1f2937 0%, #111827 45%, #020617 100%);
-	color: #fff;
+	background: radial-gradient(circle at top, hsl(var(--colorBrandPrimary) / 0.2) 0%, var(--colorBackgroundSecondary) 45%, var(--colorBackgroundPrimary) 100%);
+	color: var(--colorContentPrimary);
 
 	header {
 		display: flex;
@@ -23,8 +23,8 @@
 	}
 
 	.boardColumn {
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.16);
+		background: var(--colorBackgroundPrimary);
+		border: 1px solid var(--colorBorder);
 		border-radius: 1rem;
 		backdrop-filter: blur(10px);
 		overflow: hidden;
@@ -35,10 +35,10 @@
 			padding: 0.8rem 1rem;
 			font-weight: 700;
 			font-size: 1.1rem;
-			background: rgba(255, 255, 255, 0.08);
+			background: var(--colorBackgroundSecondary);
 
 			span {
-				color: #fbbf24;
+				color: hsl(var(--colorBrandPrimary));
 			}
 		}
 
@@ -54,7 +54,7 @@
 	.orderName {
 		padding: 0.9rem 1rem;
 		border-radius: 0.7rem;
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--colorBackgroundSecondary);
 		font-size: clamp(1rem, 1.5vw, 1.3rem);
 		font-weight: 600;
 		letter-spacing: 0.02em;

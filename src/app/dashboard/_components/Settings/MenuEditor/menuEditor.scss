@@ -130,7 +130,7 @@
 }
 
 .menuForm {
-	width: min(760px, 92vw);
+	width: min(940px, 95vw);
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
@@ -154,7 +154,7 @@
 		}
 
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(260px, 1fr));
 		gap: 10px;
 
 		input, select {
@@ -269,6 +269,15 @@
 
 				padding: 30px 20px 55px;
 			}
+		}
+	}
+}
+
+
+@media (width <= 900px) {
+	.menuForm {
+		.grid {
+			grid-template-columns: 1fr;
 		}
 	}
 }

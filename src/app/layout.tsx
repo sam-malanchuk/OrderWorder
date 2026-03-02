@@ -9,8 +9,8 @@ import "./globals.scss";
 export const metadata: Metadata = {
 	metadataBase: new URL(SITE_URL),
 	title: {
-		template: `%s | ${SITE_NAME}`,
-		default: `${SITE_NAME} — Contactless Restaurant Ordering & AI-Powered Dining`,
+		template: `%s`,
+		default: "Contactless Restaurant Ordering & AI-Powered Dining",
 	},
 	description: SITE_DESCRIPTION,
 	keywords: [...SITE_KEYWORDS],

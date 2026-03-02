@@ -6,7 +6,7 @@ import { themeController } from "xtreme-ui";
 import { getThemeColor } from "#utils/database/helper/getThemeColor";
 
 export const metadata = {
-	title: "OrderWorder ⌘ Admin",
+	title: "Admin",
 };
 export default async function RootLayout({ children }: IRootProps) {
 	const themeColor = await getThemeColor();
