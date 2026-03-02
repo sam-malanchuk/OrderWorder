@@ -148,20 +148,25 @@ const CartPage = (props: TCartPageProps) => {
 						</div>
 					)}
 					<div className="cartAction">
-						<Button
-							iconType="solid"
-							size="mini"
-							icon={bottomBarActive ? "f078" : props.selectedProducts.length > 0 ? "e1bc" : "f09d"}
-							label={
-								bottomBarActive
-									? "close"
-									: props.selectedProducts.length > 0
-										? `${selectionTotal} | ${order?.products?.length ? "Add to order" : "Place order"}`
-										: "Proceed to Pay"
-							}
-							loading={placingOrder}
-							onClick={onOrderAction}
-						/>
+						{(() => {
+							const actionIcon = bottomBarActive ? "f078" : props.selectedProducts.length > 0 ? undefined : "f09d";
+							return (
+								<Button
+									iconType={actionIcon ? "solid" : undefined}
+									size="mini"
+									icon={actionIcon}
+									label={
+										bottomBarActive
+											? "close"
+											: props.selectedProducts.length > 0
+												? `${selectionTotal > 0 ? `${selectionTotal} | ` : ""}${order?.products?.length ? "Add to order" : "Place order"}`
+												: "Proceed to Pay"
+									}
+									loading={placingOrder}
+									onClick={onOrderAction}
+								/>
+							);
+						})()}
 					</div>
 				</div>
 				{order && (

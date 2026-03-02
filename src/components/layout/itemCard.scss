@@ -3,7 +3,7 @@
 
 	position: relative;
 	display: flex;
-	height: calc(var(--itemSize) + 20px);
+	min-height: calc(var(--itemSize) + 20px);
 	background-color: var(--colorBackgroundPrimary);
 	border-radius: calc(var(--itemSize) / 4);
 	overflow: hidden;
@@ -40,21 +40,33 @@
 		flex-grow: 1;
 		justify-content: space-between;
 		padding: 5px;
+		gap: 6px;
 
 		.title {
 			margin: 0 10px;
+			text-wrap: pretty;
 			text-overflow: ellipsis;
 			display: -webkit-box;
-			-webkit-line-clamp: 2;
+			-webkit-line-clamp: 3;
 			-webkit-box-orient: vertical;
 			font-size: 13px;
 			font-variation-settings: 'wdth' 75, 'wght' 500;
 			overflow: hidden;
 		}
 
+		.subtitle {
+			margin: 0 10px;
+			font-size: 11px;
+			line-height: 1.3;
+			color: var(--colorContentSecondary);
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
 		.footer {
-			position: absolute;
-			bottom: 0;
+			margin-top: auto;
 			width: 100%;
 			display: flex;
 			justify-content: space-between;
