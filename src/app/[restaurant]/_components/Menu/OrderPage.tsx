@@ -101,13 +101,16 @@ const OrderPage = () => {
 	const increaseProductQuantity = (product: TMenuCustom) => {
 		if (!product.customization?.enabled) return addItemToSelection(product);
 
+		const hiddenAddons = new Set((restaurant?.profile?.addonOptions ?? []).filter((option) => option.hidden).map((option) => option.name));
+		const availableDefaultFlavors = (product.customization?.defaultFlavors ?? []).filter((flavor) => !hiddenAddons.has(flavor.name));
+
 		setCustomizationItem(product);
 		setCustomizationDraft({
 			sweetness: product.customization?.sweetness?.enabled ? product.customization.sweetness.defaultLevel : undefined,
 			ice: product.customization?.ice?.enabled ? product.customization.ice.defaultLevel : undefined,
 			temperature: product.customization?.temperature?.enabled ? product.customization.temperature.defaultValue : undefined,
 			milk: product.customization?.defaultMilk,
-			flavors: product.customization?.defaultFlavors ?? [],
+			flavors: availableDefaultFlavors,
 		});
 		setCustomizationOpen(true);
 	};
@@ -180,7 +183,12 @@ const OrderPage = () => {
 	const temperatureOptions: TTemperatureOption[] = ["hot", "cold"];
 	const onCustomizationConfirm = () => {
 		if (!customizationItem) return;
-		addItemToSelection(customizationItem, customizationDraft);
+		const hiddenAddons = new Set((restaurant?.profile?.addonOptions ?? []).filter((option) => option.hidden).map((option) => option.name));
+		const finalDraft = {
+			...customizationDraft,
+			flavors: (customizationDraft.flavors ?? []).filter((flavor) => !hiddenAddons.has(flavor.name)),
+		};
+		addItemToSelection(customizationItem, finalDraft);
 		setCustomizationOpen(false);
 		setCustomizationItem(undefined);
 	};
@@ -308,7 +316,7 @@ const OrderPage = () => {
 				)}
 			</SideSheet>
 			<Modal open={loginOpen} setOpen={setLoginOpen}>
-				<UserLogin setOpen={setLoginOpen} />
+				<UserLogin setOpen={setLoginOpen} open={loginOpen} />
 			</Modal>
 			<Modal open={customizationOpen} setOpen={setCustomizationOpen}>
 				<div className="customizationModal">
@@ -391,7 +399,7 @@ const OrderPage = () => {
 							<div className="flavorRows">
 								{customizationItem?.customization?.flavorOptions?.map((flavor) => {
 									const isOutOfStock = restaurant?.profile?.addonOptions?.some((option) => option.name === flavor && option.hidden);
-									const current = customizationDraft.flavors?.find((f) => f.name === flavor);
+									const current = isOutOfStock ? undefined : customizationDraft.flavors?.find((f) => f.name === flavor);
 									return (
 										<div className="flavorRow" key={flavor}>
 											<span className={isOutOfStock ? "danger" : ""}>

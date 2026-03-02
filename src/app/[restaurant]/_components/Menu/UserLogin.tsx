@@ -7,7 +7,7 @@ import { Button, Textfield } from "xtreme-ui";
 
 import "./userLogin.scss";
 
-const UserLogin = ({ setOpen }: UserLoginProps) => {
+const UserLogin = ({ setOpen, open }: UserLoginProps) => {
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const table = params.get("table") ?? "1";
@@ -45,6 +45,12 @@ const UserLogin = ({ setOpen }: UserLoginProps) => {
 		setButtonLabel("Order");
 	}, []);
 
+	useEffect(() => {
+		if (!open) return;
+		setFName("");
+		setLName("");
+	}, [open]);
+
 	return (
 		<div className="userLogin signOTP">
 			<div className="header">
@@ -59,7 +65,10 @@ const UserLogin = ({ setOpen }: UserLoginProps) => {
 						id="user-login-fname"
 						className="fName"
 						placeholder="First Name"
-						autoComplete="given-name"
+						autoComplete="off"
+						autoCorrect="off"
+						autoCapitalize="words"
+						spellCheck={false}
 						value={fname}
 						onChange={(e: ChangeEvent<HTMLInputElement>) => setFName(e.target.value)}
 					/>
@@ -67,7 +76,10 @@ const UserLogin = ({ setOpen }: UserLoginProps) => {
 						id="user-login-lname"
 						className="lName"
 						placeholder="Last Name"
-						autoComplete="family-name"
+						autoComplete="off"
+						autoCorrect="off"
+						autoCapitalize="words"
+						spellCheck={false}
 						onEnterKey={onNext}
 						value={lname}
 						onChange={(e: ChangeEvent<HTMLInputElement>) => setLName(e.target.value)}
@@ -92,4 +104,5 @@ export default UserLogin;
 
 type UserLoginProps = {
 	setOpen: (open: boolean) => void;
+	open: boolean;
 };

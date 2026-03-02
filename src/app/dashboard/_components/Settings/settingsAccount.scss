@@ -47,6 +47,45 @@
 			margin-left: auto;
 		}
 	}
+
+	.companySettingsCard {
+		margin-top: 16px;
+		padding: 20px;
+		display: grid;
+		gap: 12px;
+		border-radius: 20px;
+		background-color: var(--colorBackgroundPrimary);
+		box-shadow: 0 10px 10px -10px rgb(0 0 0 / 10%);
+
+		h2 {
+			margin: 0;
+			font-size: 20px;
+		}
+
+		label {
+			display: grid;
+			gap: 6px;
+
+			span {
+				font-size: 12px;
+				opacity: 0.8;
+			}
+
+			input {
+				height: 42px;
+				padding: 0 12px;
+				border-radius: 10px;
+				border: 1px solid var(--colorBorder);
+				background: var(--colorBackgroundSecondary);
+				color: var(--colorContentPrimary);
+			}
+		}
+
+		.actions {
+			display: flex;
+			justify-content: flex-end;
+		}
+	}
 }
 
 @media (width <= 750px) {
