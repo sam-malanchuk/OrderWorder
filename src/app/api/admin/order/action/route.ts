@@ -66,8 +66,8 @@ const printOrderLabels = async (order: { customer?: { fname?: string; lname?: st
 	const customerName = [order.customer?.fname, order.customer?.lname].filter(Boolean).join(" ").trim() || `Table ${order.table}`;
 
 	for (const item of order.products) {
-		const product = item as TProduct & { name?: string };
-		const itemName = product?.name;
+		const product = item as TProduct & { name?: string; product?: { name?: string } };
+		const itemName = product?.name || product?.product?.name;
 		if (!itemName) continue;
 
 		const labelPayload: TPrintPayload = {
@@ -95,7 +95,9 @@ export async function POST(req: Request) {
 
 		await connectDB();
 
-		const order = await Orders.findById<TOrder>(body?.orderID).populate("customer");
+		const order = await Orders.findById<TOrder>(body?.orderID)
+			.populate("customer")
+			.populate({ path: "products.product", select: "name" });
 
 		if (!order) throw { status: 400, message: `Order with id: ${body?.orderID} not found` };
 
