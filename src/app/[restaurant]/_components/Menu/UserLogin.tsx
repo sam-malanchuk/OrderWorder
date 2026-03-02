@@ -7,71 +7,46 @@ import { Button, Textfield } from "xtreme-ui";
 
 import "./userLogin.scss";
 
-const mobileNumberPattern = /^(\+91[-\s]?)?[6-9]\d{9}$/;
 const UserLogin = ({ setOpen }: UserLoginProps) => {
 	const pathname = usePathname();
 	const params = useSearchParams();
-	const [page, setPage] = useState("phone");
-	const [buttonLabel, setButtonLabel] = useState("Next");
+	const [buttonLabel, setButtonLabel] = useState("Order");
 	const [busy, setBusy] = useState(false);
-
-	const [dialCode] = useState("91");
-	const [phone, setPhone] = useState("");
 
 	const [fname, setFName] = useState("");
 	const [lname, setLName] = useState("");
 	const [heading, setHeading] = useState(["Let's", " start ordering"]);
 
-	const phoneNumber = `+${dialCode}${phone}`;
 	const onNext = async () => {
-		if (page === "phone") {
-			if (!mobileNumberPattern.test(phoneNumber)) {
-				return toast.error("Please enter a valid phone number");
-			}
+		if (!params.get("table")) return toast.error("Please scan the QR Code");
+		if (!fname.trim()) return toast.error("Please enter your first name");
+		if (!lname.trim()) return toast.error("Please enter your last name");
 
-			setBusy(true);
-			setTimeout(() => {
-				setBusy(false);
-				setPage("signOTP");
-			}, 400);
-		} else if (page === "signOTP" || page === "loginOTP") {
-			if (!params.get("table")) return toast.error("Please scan the QR Code");
+		setBusy(true);
 
-			setBusy(true);
+		const res = await signIn("customer", {
+			redirect: false,
+			restaurant: pathname.replaceAll("/", ""),
+			fname,
+			lname,
+			table: params.get("table"),
+			callbackUrl: `${window.location.origin}`,
+		});
 
-			const res = await signIn("customer", {
-				redirect: false,
-				restaurant: pathname.replaceAll("/", ""),
-				phone: phoneNumber,
-				fname,
-				lname,
-				table: params.get("table"),
-				callbackUrl: `${window.location.origin}`,
-			});
-
-			if (res?.error) {
-				toast.error(res?.error);
-			}
-			setOpen(false);
-			setBusy(false);
+		if (res?.error) {
+			toast.error(res?.error);
 		}
+		setOpen(false);
+		setBusy(false);
 	};
 
 	useEffect(() => {
-		if (page === "phone") {
-			setHeading(["Let's", " start ordering"]);
-			setButtonLabel("Next");
-		} else if (page === "signOTP") {
-			setHeading(["Glad to", " see you here"]);
-			setButtonLabel("Order");
-		} else if (page === "loginOTP") {
-			setHeading(["Welcome", " back User"]);
-			setButtonLabel("Log In");
-		}
-	}, [page]);
+		setHeading(["Let's", " start ordering"]);
+		setButtonLabel("Order");
+	}, []);
 
 	return (
-		<div className={`userLogin ${page}`}>
+		<div className="userLogin signOTP">
 			<div className="header">
 				<span className="heading">
 					<span>{heading[0]}</span>
@@ -79,15 +54,6 @@ const UserLogin = ({ setOpen }: UserLoginProps) => {
 				</span>
 			</div>
 			<div className="content">
-				<Textfield
-					id="user-login-phone"
-					className="phone"
-					type="phone"
-					autoComplete="tel-local"
-					value={phone}
-					onEnterKey={onNext}
-					onChange={(e: ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
-				/>
 				<div className="otpContainer">
 					<Textfield
 						id="user-login-fname"
