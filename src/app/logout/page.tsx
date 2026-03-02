@@ -21,7 +21,7 @@ export default function Logout() {
 				}),
 			);
 
-			signOut();
+			signOut({ redirect: false });
 		} else if (session?.status === "unauthenticated") {
 			try {
 				const { role, restaurant, table } = JSON.parse(localStorage.getItem("logoutData") ?? "");

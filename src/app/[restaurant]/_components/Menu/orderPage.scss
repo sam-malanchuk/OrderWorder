@@ -269,29 +269,63 @@
 	.customizationGrid {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 14px;
 
-		select {
-			height: 40px;
+		.customizationField {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+
+			.label {
+				font-size: 13px;
+				font-variation-settings: 'wdth' 75, 'wght' 500;
+				opacity: 0.8;
+			}
+		}
+
+		.choiceGroup {
+			display: flex;
 			border: 1px solid var(--colorBorder);
-			border-radius: 10px;
-			padding: 0 10px;
+			border-radius: 12px;
+			overflow: hidden;
 			background: var(--colorBackgroundPrimary);
-			color: var(--colorContentPrimary);
+
+			button {
+				flex: 1;
+				height: 42px;
+				padding: 0 10px;
+				border: 0;
+				border-right: 1px solid var(--colorBorder);
+				background: transparent;
+				color: var(--colorContentPrimary);
+				cursor: pointer;
+				font-size: 13px;
+				white-space: nowrap;
+
+				&:last-child {
+					border-right: 0;
+				}
+
+				&.active {
+					background: hsl(var(--colorBrandPrimary) / 0.16);
+					font-variation-settings: 'wdth' 75, 'wght' 600;
+				}
+			}
 		}
 
 		.flavorRows {
 			display: flex;
 			flex-direction: column;
-			gap: 8px;
+			gap: 10px;
 
 			.flavorRow {
 				display: flex;
-				align-items: center;
-				gap: 10px;
+				flex-direction: column;
+				gap: 8px;
 
-				span {
-					min-width: 110px;
+				> span {
+					font-size: 13px;
+					text-transform: capitalize;
 				}
 			}
 		}

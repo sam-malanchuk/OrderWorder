@@ -68,6 +68,7 @@ const MenuEditor = () => {
 
 	const vegOptions = ["veg", "non-veg", "contains-egg"] as const;
 	const levelOptions = ["none", "lite", "reg", "extra"] as const;
+	const levelLabel = { none: "None", lite: "Light", reg: "Regular", extra: "Extra" } as const;
 	const foodTypeOptions = ["", "spicy", "extra-spicy", "sweet"] as const;
 
 	const onCategoryScroll = (event: UIEvent<HTMLDivElement>) => {
@@ -286,26 +287,25 @@ const MenuEditor = () => {
 								/>{" "}
 								Sweetness
 							</label>
-							<select
-								value={form.customization.sweetness.defaultLevel}
-								onChange={(e) =>
-									setForm((v) => ({
-										...v,
-										customization: {
-											...v.customization,
-											sweetness: {
-												...v.customization.sweetness,
-												defaultLevel: e.target.value as TMenuForm["customization"]["sweetness"]["defaultLevel"],
-											},
-										},
-									}))
-								}>
+							<div className="choiceGroup">
 								{levelOptions.map((level) => (
-									<option key={level} value={level}>
-										{level}
-									</option>
+									<button
+										key={level}
+										type="button"
+										className={form.customization.sweetness.defaultLevel === level ? "active" : ""}
+										onClick={() =>
+											setForm((v) => ({
+												...v,
+												customization: {
+													...v.customization,
+													sweetness: { ...v.customization.sweetness, defaultLevel: level },
+												},
+											}))
+										}>
+										{levelLabel[level]}
+									</button>
 								))}
-							</select>
+							</div>
 							<label className="check">
 								{" "}
 								<input
@@ -317,23 +317,25 @@ const MenuEditor = () => {
 								/>{" "}
 								Ice
 							</label>
-							<select
-								value={form.customization.ice.defaultLevel}
-								onChange={(e) =>
-									setForm((v) => ({
-										...v,
-										customization: {
-											...v.customization,
-											ice: { ...v.customization.ice, defaultLevel: e.target.value as TMenuForm["customization"]["ice"]["defaultLevel"] },
-										},
-									}))
-								}>
+							<div className="choiceGroup">
 								{levelOptions.map((level) => (
-									<option key={level} value={level}>
-										{level}
-									</option>
+									<button
+										key={level}
+										type="button"
+										className={form.customization.ice.defaultLevel === level ? "active" : ""}
+										onClick={() =>
+											setForm((v) => ({
+												...v,
+												customization: {
+													...v.customization,
+													ice: { ...v.customization.ice, defaultLevel: level },
+												},
+											}))
+										}>
+										{levelLabel[level]}
+									</button>
 								))}
-							</select>
+							</div>
 							<input
 								placeholder="Milk options (comma-separated)"
 								value={form.customization.milkOptions}
