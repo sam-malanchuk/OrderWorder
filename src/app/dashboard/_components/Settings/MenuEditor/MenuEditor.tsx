@@ -65,6 +65,7 @@ const MenuEditor = () => {
 	const [form, setForm] = useState<TMenuForm>(defaultForm);
 	const [hideSettingsLoading, setHideSettingsLoading] = useState<string[]>([]);
 	const [category, setCategory] = useState(0);
+	const [settingsSaving, setSettingsSaving] = useState(false);
 
 	const [categorySettings, setCategorySettings] = useState<TCategorySetting[]>([]);
 	const [milkOptions, setMilkOptions] = useState<TOption[]>([]);
@@ -215,6 +216,7 @@ const MenuEditor = () => {
 						<Icon code="f054" type="solid" />
 					</div>
 				</div>
+
 				<div className="menuItemEditor">
 					<div className="menuItemHeader">
 						<h1 className="menuItemHeading">Menu Items</h1>
@@ -229,6 +231,95 @@ const MenuEditor = () => {
 								hideSettingsLoading={hideSettingsLoading.includes(item._id.toString())}
 							/>
 						))}
+					</div>
+				</div>
+
+				<div className="menuItemEditor">
+					<div className="menuItemHeader">
+						<h1 className="menuItemHeading">Option Lists</h1>
+					</div>
+					<div className="menuItemContainer" style={{ padding: "1rem", display: "grid", gap: "1rem" }}>
+						<div>
+							<h4>Categories</h4>
+							{categorySettings.map((option, i) => (
+								<div key={i} style={{ display: "flex", gap: ".5rem", marginBottom: ".5rem" }}>
+									<input
+										value={option.name}
+										onChange={(e) => setCategorySettings((v) => v.map((x, idx) => (idx === i ? { ...x, name: e.target.value.toLowerCase() } : x)))}
+									/>
+									<input
+										type="color"
+										value={option.color}
+										onChange={(e) => setCategorySettings((v) => v.map((x, idx) => (idx === i ? { ...x, color: e.target.value } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon={option.hidden ? "f070" : "f06e"}
+										onClick={() => setCategorySettings((v) => v.map((x, idx) => (idx === i ? { ...x, hidden: !x.hidden } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon="f2ed"
+										type="secondaryDanger"
+										onClick={() => setCategorySettings((v) => v.filter((_, idx) => idx !== i))}
+									/>
+								</div>
+							))}
+							<Button size="mini" label="Add category" onClick={() => setCategorySettings((v) => [...v, { name: "", color: "#64748b", hidden: false }])} />
+						</div>
+						<div>
+							<h4>Milk Options</h4>
+							{milkOptions.map((option, i) => (
+								<div key={i} style={{ display: "flex", gap: ".5rem", marginBottom: ".5rem" }}>
+									<input
+										value={option.name}
+										onChange={(e) => setMilkOptions((v) => v.map((x, idx) => (idx === i ? { ...x, name: e.target.value } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon={option.hidden ? "f070" : "f06e"}
+										onClick={() => setMilkOptions((v) => v.map((x, idx) => (idx === i ? { ...x, hidden: !x.hidden } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon="f2ed"
+										type="secondaryDanger"
+										onClick={() => setMilkOptions((v) => v.filter((_, idx) => idx !== i))}
+									/>
+								</div>
+							))}
+							<Button size="mini" label="Add milk option" onClick={() => setMilkOptions((v) => [...v, { name: "", hidden: false }])} />
+						</div>
+						<div>
+							<h4>Add-ons</h4>
+							{addonOptions.map((option, i) => (
+								<div key={i} style={{ display: "flex", gap: ".5rem", marginBottom: ".5rem" }}>
+									<input
+										value={option.name}
+										onChange={(e) => setAddonOptions((v) => v.map((x, idx) => (idx === i ? { ...x, name: e.target.value } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon={option.hidden ? "f070" : "f06e"}
+										onClick={() => setAddonOptions((v) => v.map((x, idx) => (idx === i ? { ...x, hidden: !x.hidden } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon="f2ed"
+										type="secondaryDanger"
+										onClick={() => setAddonOptions((v) => v.filter((_, idx) => idx !== i))}
+									/>
+								</div>
+							))}
+							<Button size="mini" label="Add add-on" onClick={() => setAddonOptions((v) => [...v, { name: "", hidden: false }])} />
+						</div>
+						<Button label="Save Lists" loading={settingsSaving} onClick={onSaveOptions} />
 					</div>
 				</div>
 				<Button className={`menuEditorAdd ${formOpen ? "active" : ""}`} onClick={openCreateForm} icon="2b" iconType="solid" />
