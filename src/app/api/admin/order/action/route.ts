@@ -9,6 +9,7 @@ import { CatchNextResponse } from "#utils/helper/common";
 
 const actions = ["accept", "reject", "rejectOnActive", "complete"];
 const maxPrintAttempts = 3;
+const defaultPrintUrl = "http://localhost:1777/print";
 
 type TPrintPayload = {
 	customer: string;
@@ -44,7 +45,7 @@ const postLabelWithRetry = async (printUrl: string, payload: TPrintPayload) => {
 			});
 			const data = await response.json().catch(() => ({}));
 
-			if (response.ok && data?.ok === true) return;
+			if (response.ok) return;
 			lastError = data?.error || `Printer request failed with status ${response.status}`;
 		} catch (error) {
 			lastError = error instanceof Error ? error.message : "Printer request failed";
@@ -60,8 +61,7 @@ const printOrderLabels = async (order: { customer?: { fname?: string; lname?: st
 	if (!sessionUsername) return;
 
 	const profile = await Profiles.findOne<TProfile>({ restaurantID: sessionUsername }).select("printUrl").lean();
-	const printUrl = profile?.printUrl?.trim();
-	if (!printUrl) return;
+	const printUrl = profile?.printUrl?.trim() || defaultPrintUrl;
 
 	const customerName = [order.customer?.fname, order.customer?.lname].filter(Boolean).join(" ").trim() || `Table ${order.table}`;
 
