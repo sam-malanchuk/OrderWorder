@@ -21,9 +21,12 @@ export async function GET(req: Request) {
 		const account = await getRestaurantData(username);
 		if (!account) throw { status: 404, message: `Account with restaurant id: ${username} is not found` };
 
+		const profile = omit(account?.profile, ["__v", "_id"]) as typeof account.profile & { categorySettings?: Array<{ name: string; color: string; hidden: boolean }> };
+		if (!profile.categorySettings?.length) profile.categorySettings = (profile.categories ?? []).map((name: string) => ({ name, color: "#64748b", hidden: false }));
+
 		return NextResponse.json({
 			...omit(account, ["__v", "_id", "kitchens", "password", "profile", "menus", "tables"]),
-			profile: omit(account?.profile, ["__v", "_id"]),
+			profile,
 			menus: account?.menus.map((v: TMenu) => omit(v, ["__v"])),
 			tables: account?.tables.map((v: TTable) => omit(v, ["__v", "_id"])),
 		});

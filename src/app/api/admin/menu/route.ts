@@ -38,7 +38,6 @@ export async function POST(req: Request) {
 			})) ?? [];
 
 		if (!name) throw { status: 400, message: "Menu item name is required" };
-		if (!description) throw { status: 400, message: "Description is required" };
 		if (!category) throw { status: 400, message: "Category is required" };
 		if (!Number.isFinite(price)) throw { status: 400, message: "Valid price is required" };
 		if (!Number.isFinite(taxPercent)) throw { status: 400, message: "Valid tax percent is required" };
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
 			if (existing.restaurantID !== restaurantID) throw { status: 403, message: "Unauthorized menu edit" };
 
 			existing.name = name;
-			existing.description = description;
+			existing.description = description || "";
 			existing.category = category;
 			existing.price = price;
 			existing.taxPercent = taxPercent;
@@ -81,7 +80,7 @@ export async function POST(req: Request) {
 
 		const item = new Menus({
 			name,
-			description,
+			description: description || "",
 			category,
 			price,
 			taxPercent,
@@ -116,3 +115,25 @@ export async function POST(req: Request) {
 }
 
 export const dynamic = "force-dynamic";
+
+export async function DELETE(req: Request) {
+	try {
+		await connectDB();
+		const session = await getServerSession(authOptions);
+		const body = await req.json();
+
+		if (!session) throw { status: 401, message: "Authentication Required" };
+		if (!body?.itemId) throw { status: 400, message: "Menu item id is required" };
+
+		const restaurantID = session?.username;
+		const existing = await Menus.findById<TMenu>(body.itemId);
+		if (!existing) throw { status: 404, message: "Menu item not found" };
+		if (existing.restaurantID !== restaurantID) throw { status: 403, message: "Unauthorized menu delete" };
+
+		await Menus.deleteOne({ _id: body.itemId });
+		return NextResponse.json({ status: 200, message: "Menu item deleted successfully" });
+	} catch (err) {
+		console.log(err);
+		return CatchNextResponse(err);
+	}
+}

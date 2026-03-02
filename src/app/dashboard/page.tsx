@@ -8,6 +8,7 @@ import "./dashboard.scss";
 
 const navItems = [
 	{ label: "orders", icon: "e43b", value: "orders" },
+	{ label: "edit menu", icon: "f303", value: "menu" },
 	{ label: "settings", icon: "f013", value: "settings" },
 ];
 

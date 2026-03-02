@@ -284,6 +284,16 @@
 		}
 
 		.choiceGroup {
+			button.danger,
+			> span.danger {
+				color: var(--colorDangerPrimary);
+			}
+
+			button:disabled {
+				opacity: 0.55;
+				cursor: not-allowed;
+			}
+
 			display: flex;
 			border: 1px solid var(--colorBorder);
 			border-radius: 12px;

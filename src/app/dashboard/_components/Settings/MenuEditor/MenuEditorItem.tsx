@@ -27,7 +27,7 @@ const MenuEditorItem = (props: TMenuEditorItemProps) => {
 					<div className="menuItemData">
 						<h5 className="menuItemTitle">{item.name}</h5>
 						<p className="menuItemDesc">{item.description}</p>
-						<p className="menuItemPrice rupee">{item.price}</p>
+						{item.price > 0 && <p className="menuItemPrice rupee">{item.price}</p>}
 					</div>
 					<div className="menuItemOptions">
 						<Button

@@ -59,6 +59,21 @@
 		background: var(--colorBackgroundPrimary);
 		border: 1px solid var(--colorBorder);
 
+
+		position: relative;
+
+		.dangerAction {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			--buttonWidth: 34px;
+		}
+
+		.primaryActionWrap {
+			display: grid;
+			align-content: center;
+		}
+
 		.name {
 			margin: 0;
 			font-weight: 600;
@@ -104,5 +119,34 @@
 @media (max-width: 900px) {
 	.kitchenBoard .columns {
 		grid-template-columns: 1fr;
+	}
+}
+
+
+.kitchenBoard {
+	.removeItemsTrigger {
+		position: fixed;
+		right: 24px;
+		bottom: 24px;
+		z-index: 4;
+		--buttonWidth: 180px;
+		box-shadow: 0 10px 30px rgb(0 0 0 / 20%);
+	}
+
+	.kitchenConfirmModal {
+		width: min(520px, 92vw);
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+
+		h3, p {
+			margin: 0;
+		}
+
+		.actions {
+			display: flex;
+			justify-content: flex-end;
+			gap: 8px;
+		}
 	}
 }

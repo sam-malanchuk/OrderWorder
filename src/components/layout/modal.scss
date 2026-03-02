@@ -1,7 +1,7 @@
 .modal {
 	--modalDuration: 0.2s;
 
-	position: absolute;
+	position: fixed;
 	top: 0; left: 0;
 	width: 100%; 
 	height: 100%;
@@ -18,7 +18,7 @@
 		}
 
 		.modalPane {
-			position: absolute;
+			position: fixed;
 			top: 50%; right: 50%;
 			transform: scale(1) translate(50%, -50%);
 			opacity: 1;
@@ -27,7 +27,7 @@
 	}
 
 	.backdrop {
-		position: absolute;
+		position: fixed;
 		top: 0; left: 0;
 		width: 100%; 
 		height: 100%;
@@ -36,22 +36,22 @@
 	}
 
 	.modalPane {
-		position: absolute;
+		position: fixed;
 		top: 63px; right: 51px;
 		opacity: 0;
 		display: flex;
 		width: 500px;
 		padding: 36px;
 		transform: scale(0) translate(50%, -50%);
-		transform-origin: top right;
+		transform-origin: center;
 		border-radius: 25px;
 		overflow: hidden;
 		box-shadow: 0 0 100px rgb(0 0 0 / 30%);
 		background-color: var(--colorBackgroundPrimary);
-		transition: all var(--modalDuration) ease-out, top var(--modalDuration) ease-in;
+		transition: all var(--modalDuration) ease-out;
 
 		.closeModal {
-			position: absolute;
+			position: fixed;
 			top: 24px; right: 24px;
 			cursor: pointer;
 		}
