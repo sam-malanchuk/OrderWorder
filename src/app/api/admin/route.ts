@@ -16,8 +16,19 @@ export async function GET() {
 
 		if (!account) throw { status: 500, message: "Unable to fetch data" };
 
+		const profile = account.profile
+			? {
+					...account.profile,
+					categorySettings: account.profile.categorySettings?.length
+						? account.profile.categorySettings
+						: (account.profile.categories ?? []).map((name: string) => ({ name, color: "#64748b", hidden: false })),
+					milkOptions: account.profile.milkOptions ?? [],
+					addonOptions: account.profile.addonOptions ?? [],
+				}
+			: undefined;
+
 		return NextResponse.json({
-			profile: account.profile,
+			profile,
 			menus: account.menus,
 			tables: account.tables,
 		});
