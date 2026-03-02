@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import connectDB from "#utils/database/connect";
 import type { TCustomer } from "#utils/database/models/customer";
 import { Orders, type TOrder } from "#utils/database/models/order";
+import { Profiles, type TProfile } from "#utils/database/models/profile";
 import { CatchNextResponse } from "#utils/helper/common";
 
 const fiveMinutesMs = 5 * 60 * 1000;
@@ -28,7 +29,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ restaurant
 		if (!restaurant) throw { status: 400, message: "Restaurant username is required" };
 
 		await connectDB();
-		const orders = ((await Orders.find({ restaurantID: restaurant }).populate<{ customer: TCustomer }>("customer").lean()) as unknown as TOrderWithMeta[]) ?? [];
+		const profile = await Profiles.findOne<TProfile>({ $or: [{ restaurantID: restaurant }, { orderUrlSlug: restaurant }] })
+			.select("restaurantID")
+			.lean();
+		const restaurantID = profile?.restaurantID || restaurant;
+		const orders = ((await Orders.find({ restaurantID }).populate<{ customer: TCustomer }>("customer").lean()) as unknown as TOrderWithMeta[]) ?? [];
 
 		const now = Date.now();
 		const boardOrders = orders

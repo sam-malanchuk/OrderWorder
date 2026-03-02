@@ -21,19 +21,21 @@ const SettingsAccount = () => {
 	const [companyImage, setCompanyImage] = useState("");
 	const [savingCompany, setSavingCompany] = useState(false);
 	const [orderUrlSlug, setOrderUrlSlug] = useState("");
+	const [printUrl, setPrintUrl] = useState("");
 
 	useEffect(() => {
 		if (profile?.name) setRestaurantName(splitStringByFirstWord(profile?.name) ?? []);
 		setCompanyName(profile?.name ?? "");
 		setCompanyImage(profile?.avatar ?? "");
 		setOrderUrlSlug(profile?.orderUrlSlug ?? profile?.restaurantID ?? "");
-	}, [profile?.avatar, profile?.name, profile?.orderUrlSlug, profile?.restaurantID]);
+		setPrintUrl(profile?.printUrl ?? "");
+	}, [profile?.avatar, profile?.name, profile?.orderUrlSlug, profile?.restaurantID, profile?.printUrl]);
 
 	const onSaveCompany = async () => {
 		setSavingCompany(true);
 		const req = await fetch("/api/admin/profile", {
 			method: "POST",
-			body: JSON.stringify({ name: companyName, avatar: companyImage, orderUrlSlug }),
+			body: JSON.stringify({ name: companyName, avatar: companyImage, orderUrlSlug, printUrl }),
 		});
 		const res = await req.json();
 		if (res?.status === 200) {
@@ -78,6 +80,12 @@ const SettingsAccount = () => {
 					<input value={orderUrlSlug} onChange={(e) => onOrderUrlChange(e.target.value)} placeholder="myrestaurant" />
 					<small>Only letters and numbers, no spaces or special characters.</small>
 					<small className="preview">Preview: {orderUrlPreview}</small>
+				</label>
+
+				<label>
+					<span>Print URL</span>
+					<input value={printUrl} onChange={(e) => setPrintUrl(e.target.value)} placeholder="http://localhost:1777/print" />
+					<small>Used by kitchen on Complete to print one label per item.</small>
 				</label>
 				<div className="actions">
 					<Button label="Save Company" icon="f0c7" iconType="solid" loading={savingCompany} onClick={onSaveCompany} />
