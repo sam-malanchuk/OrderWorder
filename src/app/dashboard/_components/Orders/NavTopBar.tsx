@@ -20,6 +20,7 @@ const subNavItems = {
 		{ label: "account", route: "account" },
 		{ label: "menu", route: "menu" },
 	],
+	menu: [{ label: "menu", route: "menu" }],
 } as Record<string, Array<{ label: string; route: string }>>;
 
 const NavTopBar = (props: TNavTopBarProps) => {

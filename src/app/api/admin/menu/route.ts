@@ -115,3 +115,25 @@ export async function POST(req: Request) {
 }
 
 export const dynamic = "force-dynamic";
+
+export async function DELETE(req: Request) {
+	try {
+		await connectDB();
+		const session = await getServerSession(authOptions);
+		const body = await req.json();
+
+		if (!session) throw { status: 401, message: "Authentication Required" };
+		if (!body?.itemId) throw { status: 400, message: "Menu item id is required" };
+
+		const restaurantID = session?.username;
+		const existing = await Menus.findById<TMenu>(body.itemId);
+		if (!existing) throw { status: 404, message: "Menu item not found" };
+		if (existing.restaurantID !== restaurantID) throw { status: 403, message: "Unauthorized menu delete" };
+
+		await Menus.deleteOne({ _id: body.itemId });
+		return NextResponse.json({ status: 200, message: "Menu item deleted successfully" });
+	} catch (err) {
+		console.log(err);
+		return CatchNextResponse(err);
+	}
+}

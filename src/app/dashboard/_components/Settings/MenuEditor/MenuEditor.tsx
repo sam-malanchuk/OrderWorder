@@ -1,4 +1,4 @@
-import { type UIEvent, useEffect, useRef, useState } from "react";
+import { type UIEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { toast } from "react-toastify";
 import { Button, Icon, Spinner } from "xtreme-ui";
@@ -58,7 +58,10 @@ const defaultForm: TMenuForm = {
 const MenuEditor = () => {
 	const { profile, menus, profileLoading, profileMutate } = useAdmin();
 	const [formOpen, setFormOpen] = useState(false);
+	const [optionsOpen, setOptionsOpen] = useState(false);
 	const [formSaving, setFormSaving] = useState(false);
+	const [formDeleting, setFormDeleting] = useState(false);
+	const [settingsSaving, setSettingsSaving] = useState(false);
 	const [form, setForm] = useState<TMenuForm>(defaultForm);
 	const [hideSettingsLoading, setHideSettingsLoading] = useState<string[]>([]);
 	const [category, setCategory] = useState(0);
@@ -85,11 +88,26 @@ const MenuEditor = () => {
 		setAddonOptions(profile?.addonOptions ?? []);
 	}, [profile]);
 
+	const activeCategories = useMemo(() => categorySettings.filter((c) => !c.hidden), [categorySettings]);
+
+	useEffect(() => {
+		if (!form.customization.enabled || form.customization.milkOptions.length === 0) {
+			if (form.customization.defaultMilk) {
+				setForm((v) => ({ ...v, customization: { ...v.customization, defaultMilk: "" } }));
+			}
+			return;
+		}
+		if (!form.customization.milkOptions.includes(form.customization.defaultMilk)) {
+			setForm((v) => ({ ...v, customization: { ...v.customization, defaultMilk: v.customization.milkOptions[0] ?? "" } }));
+		}
+	}, [form.customization.defaultMilk, form.customization.enabled, form.customization.milkOptions]);
+
 	const onCategoryScroll = (event: UIEvent<HTMLDivElement>) => {
 		const target = event.target as HTMLDivElement;
 		setLeftCategoryScroll(target.scrollLeft > 50);
 		setRightCategoryScroll(Math.round(target.scrollWidth - target.scrollLeft) - 50 > target.clientWidth);
 	};
+
 	const onHide = async (itemId: string, hidden: boolean) => {
 		setHideSettingsLoading((v) => [...v, itemId]);
 		const req = await fetch("/api/admin/menu/hidden", { method: "POST", body: JSON.stringify({ itemId, hidden }) });
@@ -100,7 +118,6 @@ const MenuEditor = () => {
 	};
 
 	const openCreateForm = () => {
-		const activeCategories = categorySettings.filter((c) => !c.hidden);
 		setForm({ ...defaultForm, category: activeCategories?.[0]?.name ?? "" });
 		setFormOpen(true);
 	};
@@ -142,12 +159,26 @@ const MenuEditor = () => {
 		setFormSaving(false);
 	};
 
+	const onDeleteItem = async () => {
+		if (!form.itemId) return;
+		setFormDeleting(true);
+		const req = await fetch("/api/admin/menu", { method: "DELETE", body: JSON.stringify({ itemId: form.itemId }) });
+		const res = await req.json();
+		if (res?.status === 200) {
+			toast.success(res?.message);
+			setFormOpen(false);
+			await profileMutate();
+		} else toast.error(res?.message);
+		setFormDeleting(false);
+	};
+
 	const onSaveOptions = async () => {
 		setSettingsSaving(true);
 		const req = await fetch("/api/admin/menu/options", { method: "POST", body: JSON.stringify({ categorySettings, milkOptions, addonOptions }) });
 		const res = await req.json();
 		if (res?.status === 200) {
 			toast.success(res?.message);
+			setOptionsOpen(false);
 			await profileMutate();
 		} else toast.error(res?.message);
 		setSettingsSaving(false);
@@ -161,6 +192,7 @@ const MenuEditor = () => {
 				<div className="menuCategoryEditor">
 					<div className="menuCategoryHeader">
 						<h1 className="menuCategoryHeading">Menu Categories</h1>
+						<Button size="mini" label="Edit Option Lists" icon="f304" iconType="solid" onClick={() => setOptionsOpen(true)} />
 					</div>
 					<div className="menuCategoryContainer" ref={categories} onScroll={onCategoryScroll}>
 						{categorySettings.map((item, i) => (
@@ -293,39 +325,153 @@ const MenuEditor = () => {
 				<Button className={`menuEditorAdd ${formOpen ? "active" : ""}`} onClick={openCreateForm} icon="2b" iconType="solid" />
 			</div>
 
+			<Modal open={optionsOpen} setOpen={setOptionsOpen}>
+				<div className="menuForm">
+					<h2>Edit Option Lists</h2>
+					<div className="grid">
+						<div>
+							<p>Menu Categories</p>
+							{categorySettings.map((option, i) => (
+								<div key={i} className="optionRow">
+									<input
+										value={option.name}
+										onChange={(e) => setCategorySettings((v) => v.map((x, idx) => (idx === i ? { ...x, name: e.target.value.toLowerCase() } : x)))}
+									/>
+									<input
+										type="color"
+										value={option.color}
+										onChange={(e) => setCategorySettings((v) => v.map((x, idx) => (idx === i ? { ...x, color: e.target.value } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon={option.hidden ? "f070" : "f06e"}
+										onClick={() => setCategorySettings((v) => v.map((x, idx) => (idx === i ? { ...x, hidden: !x.hidden } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon="f2ed"
+										type="secondaryDanger"
+										onClick={() => setCategorySettings((v) => v.filter((_, idx) => idx !== i))}
+									/>
+								</div>
+							))}
+							<Button size="mini" label="Add category" onClick={() => setCategorySettings((v) => [...v, { name: "", color: "#64748b", hidden: false }])} />
+						</div>
+						<div>
+							<p>Milk Options</p>
+							{milkOptions.map((option, i) => (
+								<div key={i} className="optionRow">
+									<input
+										value={option.name}
+										onChange={(e) => setMilkOptions((v) => v.map((x, idx) => (idx === i ? { ...x, name: e.target.value } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon={option.hidden ? "f070" : "f06e"}
+										onClick={() => setMilkOptions((v) => v.map((x, idx) => (idx === i ? { ...x, hidden: !x.hidden } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon="f2ed"
+										type="secondaryDanger"
+										onClick={() => setMilkOptions((v) => v.filter((_, idx) => idx !== i))}
+									/>
+								</div>
+							))}
+							<Button size="mini" label="Add milk option" onClick={() => setMilkOptions((v) => [...v, { name: "", hidden: false }])} />
+						</div>
+						<div>
+							<p>Add-on Options</p>
+							{addonOptions.map((option, i) => (
+								<div key={i} className="optionRow">
+									<input
+										value={option.name}
+										onChange={(e) => setAddonOptions((v) => v.map((x, idx) => (idx === i ? { ...x, name: e.target.value } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon={option.hidden ? "f070" : "f06e"}
+										onClick={() => setAddonOptions((v) => v.map((x, idx) => (idx === i ? { ...x, hidden: !x.hidden } : x)))}
+									/>
+									<Button
+										size="mini"
+										iconType="solid"
+										icon="f2ed"
+										type="secondaryDanger"
+										onClick={() => setAddonOptions((v) => v.filter((_, idx) => idx !== i))}
+									/>
+								</div>
+							))}
+							<Button size="mini" label="Add add-on" onClick={() => setAddonOptions((v) => [...v, { name: "", hidden: false }])} />
+						</div>
+					</div>
+					<div className="actions">
+						<Button label="Save Lists" loading={settingsSaving} onClick={onSaveOptions} />
+					</div>
+				</div>
+			</Modal>
+
 			<Modal open={formOpen} setOpen={setFormOpen}>
 				<div className="menuForm">
 					<h2>{form.itemId ? "Edit Menu Item" : "Create Menu Item"}</h2>
-					<div className="grid">
-						<input placeholder="Name" value={form.name} onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))} />
-						<input placeholder="Description (optional)" value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} />
-						<select value={form.category} onChange={(e) => setForm((v) => ({ ...v, category: e.target.value }))}>
-							{categorySettings
-								.filter((c) => !c.hidden)
-								.map((cat) => (
+					<div className="grid labeled">
+						<label>
+							<span>Item Name</span>
+							<input value={form.name} onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))} />
+						</label>
+						<label>
+							<span>Description (optional)</span>
+							<input value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} />
+						</label>
+						<label>
+							<span>Category</span>
+							<select value={form.category} onChange={(e) => setForm((v) => ({ ...v, category: e.target.value }))}>
+								{activeCategories.map((cat) => (
 									<option key={cat.name} value={cat.name}>
 										{cat.name}
 									</option>
 								))}
-						</select>
-						<input placeholder="Image URL" value={form.image} onChange={(e) => setForm((v) => ({ ...v, image: e.target.value }))} />
-						<input placeholder="Price" value={form.price} onChange={(e) => setForm((v) => ({ ...v, price: e.target.value }))} />
-						<input placeholder="Tax %" value={form.taxPercent} onChange={(e) => setForm((v) => ({ ...v, taxPercent: e.target.value }))} />
-						<select value={form.veg} onChange={(e) => setForm((v) => ({ ...v, veg: e.target.value as TMenuForm["veg"] }))}>
-							{vegOptions.map((veg) => (
-								<option key={veg} value={veg}>
-									{veg}
-								</option>
-							))}
-						</select>
-						<select value={form.foodType} onChange={(e) => setForm((v) => ({ ...v, foodType: e.target.value as TMenuForm["foodType"] }))}>
-							{foodTypeOptions.map((type) => (
-								<option key={type || "none"} value={type}>
-									{type || "no food type"}
-								</option>
-							))}
-						</select>
+							</select>
+						</label>
+						<label>
+							<span>Image URL</span>
+							<input value={form.image} onChange={(e) => setForm((v) => ({ ...v, image: e.target.value }))} />
+						</label>
+						<label>
+							<span>Price</span>
+							<input value={form.price} onChange={(e) => setForm((v) => ({ ...v, price: e.target.value }))} />
+						</label>
+						<label>
+							<span>Tax %</span>
+							<input value={form.taxPercent} onChange={(e) => setForm((v) => ({ ...v, taxPercent: e.target.value }))} />
+						</label>
+						<label>
+							<span>Veg Type</span>
+							<select value={form.veg} onChange={(e) => setForm((v) => ({ ...v, veg: e.target.value as TMenuForm["veg"] }))}>
+								{vegOptions.map((veg) => (
+									<option key={veg} value={veg}>
+										{veg}
+									</option>
+								))}
+							</select>
+						</label>
+						<label>
+							<span>Food Tag</span>
+							<select value={form.foodType} onChange={(e) => setForm((v) => ({ ...v, foodType: e.target.value as TMenuForm["foodType"] }))}>
+								{foodTypeOptions.map((type) => (
+									<option key={type || "none"} value={type}>
+										{type || "none"}
+									</option>
+								))}
+							</select>
+						</label>
 					</div>
+
 					<div className="toggleLine">
 						<label>
 							<input
@@ -415,16 +561,20 @@ const MenuEditor = () => {
 										</label>
 									))}
 							</div>
-							<select
-								value={form.customization.defaultMilk}
-								onChange={(e) => setForm((v) => ({ ...v, customization: { ...v.customization, defaultMilk: e.target.value } }))}>
-								<option value="">Default milk</option>
-								{form.customization.milkOptions.map((milk) => (
-									<option key={milk} value={milk}>
-										{milk}
-									</option>
-								))}
-							</select>
+							{form.customization.milkOptions.length > 0 && (
+								<label>
+									<span>Default milk</span>
+									<select
+										value={form.customization.defaultMilk}
+										onChange={(e) => setForm((v) => ({ ...v, customization: { ...v.customization, defaultMilk: e.target.value } }))}>
+										{form.customization.milkOptions.map((milk) => (
+											<option key={milk} value={milk}>
+												{milk}
+											</option>
+										))}
+									</select>
+								</label>
+							)}
 							<div>
 								<p>Add-ons</p>
 								{addonOptions
@@ -482,6 +632,7 @@ const MenuEditor = () => {
 						</div>
 					)}
 					<div className="actions">
+						{form.itemId && <Button label="Delete Item" type="secondaryDanger" loading={formDeleting} onClick={onDeleteItem} />}
 						<Button label="Save" loading={formSaving} onClick={onSaveItem} />
 					</div>
 				</div>

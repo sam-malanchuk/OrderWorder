@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { Button, Spinner } from "xtreme-ui";
 
+import Modal from "#components/layout/Modal";
 import { fetcher } from "#utils/helper/common";
 
 import "./kitchen.scss";
@@ -28,9 +29,19 @@ type TKitchenOrder = {
 	}>;
 };
 
+type TRemoveDraft = {
+	orderID: string;
+	label: string;
+	action: "reject" | "rejectOnActive";
+	confirmLabel: "Reject" | "Cancel";
+};
+
 const Kitchen = () => {
 	const session = useSession();
 	const router = useRouter();
+	const [removeMode, setRemoveMode] = useState(false);
+	const [removeDraft, setRemoveDraft] = useState<TRemoveDraft>();
+
 	const { data, isLoading, mutate } = useSWR<TKitchenOrder[] | { message?: string }>(session.status === "unauthenticated" ? null : "/api/admin/order", fetcher, {
 		refreshInterval: 5000,
 		revalidateOnFocus: true,
@@ -62,6 +73,23 @@ const Kitchen = () => {
 	};
 
 	const getCategoryColor = (category?: string) => adminData?.profile?.categorySettings?.find((item) => item.name === category)?.color ?? "#64748b";
+	const getOrderLabel = (order: TKitchenOrder) => order.products.map((p) => `${p.name} x${p.quantity}`).join(", ");
+
+	const openRemoveConfirm = (order: TKitchenOrder, action: "reject" | "rejectOnActive", confirmLabel: "Reject" | "Cancel") => {
+		setRemoveDraft({ orderID: order._id, label: getOrderLabel(order), action, confirmLabel });
+	};
+
+	const onConfirmRemove = async () => {
+		if (!removeDraft) return;
+		await orderAction(removeDraft.orderID, removeDraft.action);
+		setRemoveDraft(undefined);
+		setRemoveMode(false);
+	};
+	const onCancelRemove = () => {
+		setRemoveDraft(undefined);
+		setRemoveMode(false);
+	};
+
 	if (session.status === "loading" || (isLoading && !data)) return <Spinner fullpage label="Loading kitchen screen..." />;
 
 	return (
@@ -94,10 +122,14 @@ const Kitchen = () => {
 										))}
 									</div>
 								</div>
-								<div style={{ display: "grid", gap: ".25rem" }}>
-									<Button size="mini" icon="f00c" iconType="solid" label="Accept" onClick={() => orderAction(order._id, "accept")} />
-									<Button size="mini" icon="f00d" iconType="solid" type="secondaryDanger" onClick={() => orderAction(order._id, "reject")} />
-								</div>
+								<Button
+									size="mini"
+									icon={removeMode ? "f00d" : "f00c"}
+									iconType="solid"
+									label={removeMode ? "Reject" : "Accept"}
+									type={removeMode ? "secondaryDanger" : "primary"}
+									onClick={() => (removeMode ? openRemoveConfirm(order, "reject", "Reject") : orderAction(order._id, "accept"))}
+								/>
 							</div>
 						))}
 					</div>
@@ -125,22 +157,42 @@ const Kitchen = () => {
 										))}
 									</div>
 								</div>
-								<div style={{ display: "grid", gap: ".25rem" }}>
-									<Button
-										size="mini"
-										icon="f00c"
-										iconType="solid"
-										label="Complete"
-										type="primarySuccess"
-										onClick={() => orderAction(order._id, "complete")}
-									/>
-									<Button size="mini" icon="f1f8" iconType="solid" type="secondaryDanger" onClick={() => orderAction(order._id, "rejectOnActive")} />
-								</div>
+								<Button
+									size="mini"
+									icon={removeMode ? "f1f8" : "f00c"}
+									iconType="solid"
+									label={removeMode ? "Cancel" : "Complete"}
+									type={removeMode ? "secondaryDanger" : "primarySuccess"}
+									onClick={() => (removeMode ? openRemoveConfirm(order, "rejectOnActive", "Cancel") : orderAction(order._id, "complete"))}
+								/>
 							</div>
 						))}
 					</div>
 				</section>
 			</div>
+			<Button
+				className={`removeItemsTrigger ${removeMode ? "active" : ""}`}
+				icon={removeMode ? "f00d" : "f1f8"}
+				iconType="solid"
+				label={removeMode ? "Exit Remove Mode" : "Remove Item"}
+				type={removeMode ? "secondaryDanger" : "secondary"}
+				onClick={() => {
+					setRemoveDraft(undefined);
+					setRemoveMode((v) => !v);
+				}}
+			/>
+			<Modal open={!!removeDraft} setOpen={() => onCancelRemove()}>
+				<div className="kitchenConfirmModal">
+					<h3>{removeDraft?.confirmLabel} this order?</h3>
+					<p>
+						Are you sure you'd like to {removeDraft?.confirmLabel?.toLowerCase()} "{removeDraft?.label}"?
+					</p>
+					<div className="actions">
+						<Button label="Keep" type="secondary" onClick={onCancelRemove} />
+						<Button label={removeDraft?.confirmLabel} type="secondaryDanger" onClick={onConfirmRemove} />
+					</div>
+				</div>
+			</Modal>
 		</div>
 	);
 };

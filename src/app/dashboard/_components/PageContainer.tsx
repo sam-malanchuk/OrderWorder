@@ -14,6 +14,7 @@ export default function PageContainer() {
 	const [floatHeader, setFloatHeader] = useState(false);
 	const queryParams = useQueryParams();
 	const tab = queryParams.get("tab") ?? "";
+	const subTab = queryParams.get("subTab") ?? "";
 
 	const onScroll = (event: UIEvent<HTMLDivElement>) => {
 		if ((event.target as HTMLDivElement).scrollTop >= 1) return setFloatHeader(true);
@@ -23,7 +24,8 @@ export default function PageContainer() {
 	useEffect(() => {
 		if (session.status === "unauthenticated") queryParams.router.replace("/#homepage-login");
 		if (session?.data?.role === "kitchen") queryParams.router.replace("/kitchen");
-	}, [queryParams.router, session]);
+		if (tab === "menu" && subTab !== "menu") queryParams.set({ subTab: "menu" });
+	}, [queryParams, queryParams.router, session, subTab, tab]);
 
 	return (
 		<div className={`dashboardViewport ${floatHeader ? "floatHeader" : ""}`}>
@@ -43,6 +45,8 @@ export default function PageContainer() {
 						orders: <Orders onScroll={onScroll} />,
 
 						settings: <Settings onScroll={onScroll} />,
+
+						menu: <Settings onScroll={onScroll} />,
 					}[tab]
 				}
 			</div>
