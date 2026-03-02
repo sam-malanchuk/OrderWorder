@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import connectDB from "#utils/database/connect";
-import { Menus, type TMenu } from "#utils/database/models/menu";
+import { Menus, type TMenu, type TModifierLevel } from "#utils/database/models/menu";
 import { Orders, type TOrder, type TProduct } from "#utils/database/models/order";
 import { authOptions } from "#utils/helper/authHelper";
 import { CatchNextResponse } from "#utils/helper/common";
+
+const levels: TModifierLevel[] = ["none", "lite", "reg", "extra"];
 
 export async function POST(req: Request) {
 	try {
@@ -17,13 +19,38 @@ export async function POST(req: Request) {
 
 		await connectDB();
 		const products: TProduct[] = await Promise.all(
-			body?.products?.map(async (product: TProduct & { _id: string }) => {
+			body?.products?.map(async (product: TOrderPlaceProduct) => {
 				const menuItem = await Menus.findById<TMenu>(product?._id).lean();
 
 				if (!menuItem) throw { status: 404, message: "Ordered product(s) not found." };
+
+				const config = menuItem.customization;
+				const selected = product?.selectedCustomization ?? {};
+				const selectedCustomization = {
+					sweetness: config?.sweetness?.enabled
+						? levels.includes((selected?.sweetness ?? config?.sweetness?.defaultLevel ?? "reg") as TModifierLevel)
+							? (selected?.sweetness ?? config?.sweetness?.defaultLevel ?? "reg")
+							: "reg"
+						: undefined,
+					ice: config?.ice?.enabled
+						? levels.includes((selected?.ice ?? config?.ice?.defaultLevel ?? "reg") as TModifierLevel)
+							? (selected?.ice ?? config?.ice?.defaultLevel ?? "reg")
+							: "reg"
+						: undefined,
+					milk: selected?.milk && config?.milkOptions?.includes(selected.milk) ? selected.milk : config?.defaultMilk,
+					flavors:
+						selected?.flavors
+							?.filter((flavor) => config?.flavorOptions?.includes(flavor.name))
+							.map((flavor) => ({
+								name: flavor.name,
+								level: levels.includes(flavor.level) ? flavor.level : "reg",
+							})) ?? [],
+				};
+
 				return {
 					product: product?._id,
 					quantity: product?.quantity,
+					selectedCustomization,
 					price: menuItem?.price,
 					tax: ((menuItem?.price * menuItem?.taxPercent) / 100).toFixed(2),
 				};
@@ -51,5 +78,16 @@ export async function POST(req: Request) {
 		return CatchNextResponse(err);
 	}
 }
+
+type TOrderPlaceProduct = {
+	_id: string;
+	quantity: number;
+	selectedCustomization?: {
+		sweetness?: TModifierLevel;
+		ice?: TModifierLevel;
+		milk?: string;
+		flavors?: Array<{ name: string; level: TModifierLevel }>;
+	};
+};
 
 export const dynamic = "force-dynamic";

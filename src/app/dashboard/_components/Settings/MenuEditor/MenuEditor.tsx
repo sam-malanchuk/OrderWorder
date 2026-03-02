@@ -51,6 +51,97 @@ const MenuEditor = () => {
 	const onEdit = (item: TMenu) => {
 		setEditItem(item);
 		setModalState("menuItemEditState");
+		void onSaveItem(item);
+	};
+	const onSaveItem = async (item?: TMenu) => {
+		const name = window.prompt("Menu item name", item?.name ?? "");
+		if (!name?.trim()) return;
+
+		const description = window.prompt("Description", item?.description ?? "");
+		if (!description?.trim()) return;
+
+		const categoryOptions = profile?.categories?.join(", ") ?? "";
+		const category = window.prompt(`Category (${categoryOptions})`, item?.category ?? profile?.categories?.[0] ?? "");
+		if (!category?.trim()) return;
+
+		const priceInput = window.prompt("Price", String(item?.price ?? ""));
+		if (!priceInput) return;
+
+		const taxInput = window.prompt("Tax Percent", String(item?.taxPercent ?? "5"));
+		if (!taxInput) return;
+
+		const veg = window.prompt("Veg type (veg, non-veg, contains-egg)", item?.veg ?? "veg");
+		if (!veg) return;
+
+		const foodType = window.prompt("Food type (spicy, extra-spicy, sweet) - optional", item?.foodType ?? "") ?? "";
+		const image = window.prompt("Image URL (optional)", item?.image ?? "") ?? "";
+		const customizationEnabled =
+			(window.prompt("Enable customizations? (yes/no)", item?.customization?.enabled ? "yes" : "no") ?? "no").trim().toLowerCase() === "yes";
+		const sweetnessEnabled = customizationEnabled
+			? (window.prompt("Enable sweetness modifier? (yes/no)", item?.customization?.sweetness?.enabled ? "yes" : "no") ?? "no").trim().toLowerCase() === "yes"
+			: false;
+		const sweetnessDefault = sweetnessEnabled
+			? (window.prompt("Sweetness default (none/lite/reg/extra)", item?.customization?.sweetness?.defaultLevel ?? "reg") ?? "reg").trim().toLowerCase()
+			: "reg";
+		const iceEnabled = customizationEnabled
+			? (window.prompt("Enable ice modifier? (yes/no)", item?.customization?.ice?.enabled ? "yes" : "no") ?? "no").trim().toLowerCase() === "yes"
+			: false;
+		const iceDefault = iceEnabled
+			? (window.prompt("Ice default (none/lite/reg/extra)", item?.customization?.ice?.defaultLevel ?? "reg") ?? "reg").trim().toLowerCase()
+			: "reg";
+		const milkOptionsInput = customizationEnabled
+			? (window.prompt("Milk options comma-separated", item?.customization?.milkOptions?.join(", ") ?? "2% milk, almond milk, whole milk, skim milk") ?? "")
+			: "";
+		const flavorOptionsInput = customizationEnabled
+			? (window.prompt("Flavor options comma-separated", item?.customization?.flavorOptions?.join(", ") ?? "caramel") ?? "")
+			: "";
+		const defaultMilk = customizationEnabled ? (window.prompt("Default milk option", item?.customization?.defaultMilk ?? "") ?? "") : "";
+
+		const milkOptions = milkOptionsInput
+			.split(",")
+			.map((v) => v.trim())
+			.filter(Boolean);
+		const flavorOptions = flavorOptionsInput
+			.split(",")
+			.map((v) => v.trim())
+			.filter(Boolean);
+		const defaultFlavors = flavorOptions.map((name) => {
+			const level = (window.prompt(`Default level for ${name} (none/lite/reg/extra)`, "reg") ?? "reg").trim().toLowerCase();
+			return { name, level };
+		});
+
+		const req = await fetch("/api/admin/menu", {
+			method: "POST",
+			body: JSON.stringify({
+				itemId: item?._id,
+				name,
+				description,
+				category,
+				price: Number(priceInput),
+				taxPercent: Number(taxInput),
+				veg,
+				foodType,
+				image,
+				hidden: item?.hidden ?? false,
+				customization: {
+					enabled: customizationEnabled,
+					sweetness: { enabled: sweetnessEnabled, defaultLevel: sweetnessDefault },
+					ice: { enabled: iceEnabled, defaultLevel: iceDefault },
+					milkOptions,
+					defaultMilk,
+					flavorOptions,
+					defaultFlavors,
+				},
+			}),
+		});
+		const res = await req.json();
+
+		if (res?.status === 200) toast.success(res?.message);
+		else toast.error(res?.message);
+
+		await profileMutate();
+		setModalState("");
+		setEditItem(undefined);
 	};
 
 	if (profileLoading) return <Spinner fullpage label="Loading Menu..." />;
@@ -88,7 +179,15 @@ const MenuEditor = () => {
 					))}
 				</div>
 			</div>
-			<Button className={`menuEditorAdd ${modalState ? "active" : ""}`} onClick={() => setModalState("newState")} icon="2b" iconType="solid" />
+			<Button
+				className={`menuEditorAdd ${modalState ? "active" : ""}`}
+				onClick={() => {
+					setModalState("newState");
+					void onSaveItem();
+				}}
+				icon="2b"
+				iconType="solid"
+			/>
 		</div>
 	);
 };

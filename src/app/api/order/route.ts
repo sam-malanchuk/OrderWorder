@@ -32,6 +32,7 @@ export async function GET() {
 					...product,
 					...menu,
 					product: menu?._id,
+					selectedCustomization: product?.selectedCustomization,
 				};
 			});
 			formattedOrder = { ...order, products: products as unknown as TProduct[] };

@@ -35,7 +35,7 @@ export default function RootLayout({ children }: IRootProps) {
 			<head>
 				<Gliff next />
 			</head>
-			<body>
+			<body suppressHydrationWarning>
 				<GlobalProvider>{children}</GlobalProvider>
 			</body>
 		</html>

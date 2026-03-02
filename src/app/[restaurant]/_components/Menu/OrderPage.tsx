@@ -6,7 +6,7 @@ import SearchButton from "#components/base/SearchButton";
 import SideSheet from "#components/base/SideSheet";
 import { useOrder, useRestaurant } from "#components/context/useContext";
 import Modal from "#components/layout/Modal";
-import type { TMenu } from "#utils/database/models/menu";
+import type { TMenu, TModifierLevel } from "#utils/database/models/menu";
 import { useQueryParams } from "#utils/hooks/useQueryParams";
 
 import CartPage from "./CartPage";
@@ -84,25 +84,79 @@ const OrderPage = () => {
 		if (table) return setLoginOpen(true);
 		return params.router.push("/scan");
 	};
+	const promptCustomization = (product: TMenuCustom): TMenuCustom["selectedCustomization"] | undefined => {
+		if (!product.customization?.enabled) return undefined;
+
+		const levels: TModifierLevel[] = ["none", "lite", "reg", "extra"];
+		const selectedCustomization: TMenuCustom["selectedCustomization"] = {
+			flavors: [],
+		};
+
+		if (product.customization.sweetness?.enabled) {
+			const value =
+				window
+					.prompt("Sweetness (none/lite/reg/extra)", product.customization.sweetness.defaultLevel ?? "reg")
+					?.trim()
+					.toLowerCase() ?? "reg";
+			selectedCustomization.sweetness = levels.includes(value as TModifierLevel) ? (value as TModifierLevel) : "reg";
+		}
+
+		if (product.customization.ice?.enabled) {
+			const value =
+				window
+					.prompt("Ice (none/lite/reg/extra)", product.customization.ice.defaultLevel ?? "reg")
+					?.trim()
+					.toLowerCase() ?? "reg";
+			selectedCustomization.ice = levels.includes(value as TModifierLevel) ? (value as TModifierLevel) : "reg";
+		}
+
+		const milkOptions = product.customization.milkOptions?.filter(Boolean) ?? [];
+		if (milkOptions.length) {
+			const value = window.prompt(`Milk option (${milkOptions.join(", ")})`, product.customization.defaultMilk ?? milkOptions[0])?.trim();
+			if (value && milkOptions.includes(value)) selectedCustomization.milk = value;
+		}
+
+		const flavorOptions = product.customization.flavorOptions?.filter(Boolean) ?? [];
+		if (flavorOptions.length) {
+			const selectedFlavorList = window
+				.prompt(`Flavors comma separated (${flavorOptions.join(", ")})`, "")
+				?.split(",")
+				.map((v) => v.trim())
+				.filter((v) => flavorOptions.includes(v));
+
+			(selectedFlavorList ?? []).forEach((flavorName) => {
+				const defaultLevel = product.customization?.defaultFlavors?.find((f) => f.name === flavorName)?.level ?? "reg";
+				const levelInput = window.prompt(`${flavorName} level (none/lite/reg/extra)`, defaultLevel)?.trim().toLowerCase() ?? defaultLevel;
+				const level = levels.includes(levelInput as TModifierLevel) ? (levelInput as TModifierLevel) : defaultLevel;
+				selectedCustomization.flavors?.push({ name: flavorName, level });
+			});
+		}
+
+		return selectedCustomization;
+	};
 	const increaseProductQuantity = (product: TMenuCustom) => {
+		const selectedCustomization = promptCustomization(product);
+		const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
+		const cartKey = `${product._id.toString()}-${selectedCustomization?.sweetness ?? ""}-${selectedCustomization?.ice ?? ""}-${selectedCustomization?.milk ?? ""}-${flavorKey}`;
 		const selection = [...selectedProducts];
-		if (selectedProducts.some((item) => item._id === product._id)) {
+		if (selectedProducts.some((item) => item.cartKey === cartKey)) {
 			selection.forEach((item) => {
-				if (product._id === item._id) item.quantity++;
+				if (item.cartKey === cartKey) item.quantity++;
 			});
 		} else {
-			product.quantity = 1;
-			selection.push(product);
+			selection.push({ ...product, quantity: 1, selectedCustomization, cartKey } as unknown as TMenuCustom);
 		}
 		setSelectedProducts(selection);
 	};
 	const decreaseProductQuantity = (product: TMenuCustom) => {
 		let selection = [...selectedProducts];
+		const targetCartKey = product.cartKey ?? selection.find((item) => item._id === product._id)?.cartKey;
+		if (!targetCartKey) return;
 		selection.forEach((item) => {
-			if (product._id === item._id) {
+			if (targetCartKey === item.cartKey) {
 				item.quantity--;
 				if (item.quantity === 0) {
-					const filter = selection.filter((tempItem) => tempItem._id !== product._id);
+					const filter = selection.filter((tempItem) => tempItem.cartKey !== targetCartKey);
 					selection = [...filter];
 				}
 			}
@@ -275,4 +329,13 @@ const OrderPage = () => {
 
 export default OrderPage;
 
-type TMenuCustom = TMenu & { quantity: number };
+type TMenuCustom = TMenu & {
+	quantity: number;
+	cartKey?: string;
+	selectedCustomization?: {
+		sweetness?: TModifierLevel;
+		ice?: TModifierLevel;
+		milk?: string;
+		flavors?: Array<{ name: string; level: TModifierLevel }>;
+	};
+};
