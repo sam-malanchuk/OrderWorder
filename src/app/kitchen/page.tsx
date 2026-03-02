@@ -24,13 +24,10 @@ type TKitchenOrder = {
 const Kitchen = () => {
 	const session = useSession();
 	const router = useRouter();
-	const {
-		data: orders = [],
-		isLoading,
-		mutate,
-	} = useSWR<TKitchenOrder[]>(session.status === "authenticated" ? "/api/admin/order" : null, fetcher, {
+	const { data, isLoading, mutate } = useSWR<TKitchenOrder[] | { message?: string }>(session.status === "authenticated" ? "/api/admin/order" : null, fetcher, {
 		refreshInterval: 5000,
 	});
+	const orders = Array.isArray(data) ? data : [];
 
 	useEffect(() => {
 		if (session.status === "unauthenticated") router.replace("/");
