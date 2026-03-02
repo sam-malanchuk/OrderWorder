@@ -71,6 +71,16 @@
 				opacity: 0.8;
 			}
 
+			small {
+				font-size: 11px;
+				opacity: 0.75;
+
+				&.preview {
+					word-break: break-all;
+					opacity: 0.95;
+				}
+			}
+
 			input {
 				height: 42px;
 				padding: 0 12px;

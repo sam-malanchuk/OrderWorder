@@ -1,9 +1,13 @@
 import connectDB from "#utils/database/connect";
 import { Profiles, type TProfile } from "#utils/database/models/profile";
 
-const SEO_FIELDS = "name restaurantID description address avatar cover categories themeColor" as const;
+const SEO_FIELDS = "name restaurantID orderUrlSlug description address avatar cover categories themeColor themeFrontend" as const;
 
 export async function getRestaurantProfile(restaurantID: string) {
 	await connectDB();
-	return Profiles.findOne<TProfile>({ restaurantID }).select(SEO_FIELDS).lean();
+	return Profiles.findOne<TProfile>({
+		$or: [{ orderUrlSlug: restaurantID }, { restaurantID, $or: [{ orderUrlSlug: { $exists: false } }, { orderUrlSlug: null }, { orderUrlSlug: "" }] }],
+	})
+		.select(SEO_FIELDS)
+		.lean();
 }

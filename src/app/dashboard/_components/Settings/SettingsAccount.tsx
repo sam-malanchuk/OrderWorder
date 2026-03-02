@@ -6,6 +6,7 @@ import { Avatar, Button, Spinner } from "xtreme-ui";
 
 import { useAdmin } from "#components/context/useContext";
 import { splitStringByFirstWord } from "#utils/helper/common";
+import { SITE_URL } from "#utils/seo/constants";
 
 import PasswordSettings from "./PasswordSettings";
 import ThemeSettings from "./ThemeSettings";
@@ -13,24 +14,30 @@ import "./settingsAccount.scss";
 
 const SettingsAccount = () => {
 	const router = useRouter();
-	const { profile, profileMutate } = useAdmin();
+	const { profile, email: accountEmail, profileMutate } = useAdmin();
 	const session = useSession();
 	const [restaurantName, setRestaurantName] = useState<string[]>([]);
 	const [companyName, setCompanyName] = useState("");
 	const [companyImage, setCompanyImage] = useState("");
+	const [companyAddress, setCompanyAddress] = useState("");
+	const [loginEmail, setLoginEmail] = useState("");
 	const [savingCompany, setSavingCompany] = useState(false);
+	const [orderUrlSlug, setOrderUrlSlug] = useState("");
 
 	useEffect(() => {
 		if (profile?.name) setRestaurantName(splitStringByFirstWord(profile?.name) ?? []);
 		setCompanyName(profile?.name ?? "");
 		setCompanyImage(profile?.avatar ?? "");
-	}, [profile?.avatar, profile?.name]);
+		setCompanyAddress(profile?.address ?? "");
+		setLoginEmail(accountEmail ?? session.data?.email ?? "");
+		setOrderUrlSlug(profile?.orderUrlSlug ?? profile?.restaurantID ?? "");
+	}, [profile?.avatar, profile?.name, profile?.orderUrlSlug, profile?.restaurantID, profile?.address, accountEmail, session.data?.email]);
 
 	const onSaveCompany = async () => {
 		setSavingCompany(true);
 		const req = await fetch("/api/admin/profile", {
 			method: "POST",
-			body: JSON.stringify({ name: companyName, avatar: companyImage }),
+			body: JSON.stringify({ name: companyName, avatar: companyImage, address: companyAddress, email: loginEmail, orderUrlSlug }),
 		});
 		const res = await req.json();
 		if (res?.status === 200) {
@@ -41,6 +48,12 @@ const SettingsAccount = () => {
 	};
 
 	if (session.status === "loading" || !profile) return <Spinner fullpage label="Loading Account..." />;
+
+	const onOrderUrlChange = (value: string) => {
+		setOrderUrlSlug(value.toLowerCase().replace(/[^a-z0-9]/g, ""));
+	};
+
+	const orderUrlPreview = `${SITE_URL}/${orderUrlSlug || profile?.restaurantID || ""}`;
 
 	return (
 		<div className="settingsAccount">
@@ -63,6 +76,20 @@ const SettingsAccount = () => {
 				<label>
 					<span>Company Image URL</span>
 					<input value={companyImage} onChange={(e) => setCompanyImage(e.target.value)} placeholder="https://example.com/image.jpg" />
+				</label>
+				<label>
+					<span>Company Location / City</span>
+					<input value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} placeholder="City or location" />
+				</label>
+				<label>
+					<span>Default Login Email</span>
+					<input value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="name@example.com" />
+				</label>
+				<label>
+					<span>Order URL</span>
+					<input value={orderUrlSlug} onChange={(e) => onOrderUrlChange(e.target.value)} placeholder="myrestaurant" />
+					<small>Only letters and numbers, no spaces or special characters.</small>
+					<small className="preview">Preview: {orderUrlPreview}</small>
 				</label>
 				<div className="actions">
 					<Button label="Save Company" icon="f0c7" iconType="solid" loading={savingCompany} onClick={onSaveCompany} />

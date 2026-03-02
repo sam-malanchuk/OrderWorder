@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { capitalize } from "xtreme-ui";
 
-import { ChatInterface } from "#components/chatbot/Chat";
 import { CustomerProvider } from "#components/context";
 import NavSideBar from "#components/layout/NavSideBar";
 import JsonLd from "#components/seo/JsonLd";
@@ -61,7 +60,6 @@ const Restaurant = async ({ params }: IRestaurantProps) => {
 			<div className="restaurant">
 				<NavSideBar navItems={navItems} defaultTab="menu" foot />
 				<PageContainer />
-				<ChatInterface />
 			</div>
 		</CustomerProvider>
 	);

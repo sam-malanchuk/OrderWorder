@@ -9,7 +9,7 @@ export const metadata = {
 	title: "Admin",
 };
 export default async function RootLayout({ children }: IRootProps) {
-	const themeColor = await getThemeColor();
+	const themeColor = await getThemeColor(undefined, "admin");
 	return (
 		<>
 			<head>
