@@ -52,7 +52,7 @@
 		background-color: var(--colorBackgroundPrimary);
 		transition: all var(--modalDuration) ease-out;
 
-		> * {
+		> :not(.closeModal) {
 			width: 100%;
 		}
 

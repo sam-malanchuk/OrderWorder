@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { getRestaurantData } from "#utils/database/helper/account";
 import type { TMenu } from "#utils/database/models/menu";
+import { Profiles, type TProfile } from "#utils/database/models/profile";
 import type { TTable } from "#utils/database/models/table";
 import { authOptions } from "#utils/helper/authHelper";
 import { CatchNextResponse } from "#utils/helper/common";
@@ -18,7 +19,11 @@ export async function GET(req: Request) {
 		}
 		if (!username) throw { status: 400, message: "Restaurant id is required to fetch menu" };
 
-		const account = await getRestaurantData(username);
+		let account = await getRestaurantData(username);
+		if (!account) {
+			const profile = await Profiles.findOne<TProfile>({ orderUrlSlug: username }).select("restaurantID").lean();
+			if (profile?.restaurantID) account = await getRestaurantData(profile.restaurantID);
+		}
 		if (!account) throw { status: 404, message: `Account with restaurant id: ${username} is not found` };
 
 		const profile = omit(account?.profile, ["__v", "_id"]) as typeof account.profile & { categorySettings?: Array<{ name: string; color: string; hidden: boolean }> };
