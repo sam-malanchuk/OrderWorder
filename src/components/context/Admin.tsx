@@ -12,6 +12,7 @@ import { fetcher } from "#utils/helper/common";
 
 const AdminDefault: TAdminInitialType = {
 	profile: undefined,
+	email: "",
 	menus: [],
 	tables: [],
 	profileLoading: false,
@@ -32,7 +33,7 @@ export const AdminProvider = ({ children }: TAdminProviderProps) => {
 	const params = useSearchParams();
 	const _tab = params.get("tab");
 	const _subTab = params.get("subTab");
-	const { data: { profile, menus = [], tables = [] } = {}, isLoading: profileLoading, mutate: profileMutate } = useSWR("/api/admin", fetcher);
+	const { data: { profile, email = "", menus = [], tables = [] } = {}, isLoading: profileLoading, mutate: profileMutate } = useSWR("/api/admin", fetcher);
 	const { data: orderData = [], isLoading: orderLoading, mutate } = useSWR("/api/admin/order", fetcher, { refreshInterval: 5000 });
 	const [orderActionLoading, setOrderActionLoading] = useState(false);
 
@@ -69,6 +70,7 @@ export const AdminProvider = ({ children }: TAdminProviderProps) => {
 		<AdminContext.Provider
 			value={{
 				profile,
+				email,
 				menus,
 				tables,
 				profileLoading,
@@ -91,6 +93,7 @@ export type TAdminProviderProps = {
 
 export type TAdminInitialType = {
 	profile?: TProfile;
+	email: string;
 	menus: TMenu[];
 	tables: TTable[];
 	profileLoading: boolean;

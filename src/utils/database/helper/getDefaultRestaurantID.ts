@@ -5,6 +5,6 @@ export async function getDefaultRestaurantID() {
 	const { Profiles } = await import("#utils/database/models/profile");
 
 	await connectDB();
-	const profile = await Profiles.findOne().sort({ createdAt: 1 }).select("restaurantID").lean();
-	return profile?.restaurantID;
+	const profile = await Profiles.findOne().sort({ createdAt: 1 }).select("restaurantID orderUrlSlug").lean();
+	return profile?.orderUrlSlug || profile?.restaurantID;
 }
