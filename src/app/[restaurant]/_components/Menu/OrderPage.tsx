@@ -38,7 +38,6 @@ const OrderPage = () => {
 	const [floatHeader, setFloatHeader] = useState(false);
 	const [leftCategoryScroll, setLeftCategoryScroll] = useState(false);
 	const [rightCategoryScroll, setRightCategoryScroll] = useState(true);
-	const [showInfoCard, setShowInfoCard] = useState(false);
 	const [customizationOpen, setCustomizationOpen] = useState(false);
 	const [customizationItem, setCustomizationItem] = useState<TMenuCustom>();
 	const [customizationDraft, setCustomizationDraft] = useState<TCustomizationDraft>({ flavors: [] });
@@ -144,7 +143,16 @@ const OrderPage = () => {
 	}, [category, menus, searchParam]);
 
 	useEffect(() => {
-		params.set({ category: category.filter((e) => restaurant?.profile.categories.includes(e)).join(",") });
+		params.set({
+			category: category
+				.filter((e) =>
+					restaurant?.profile.categorySettings
+						?.filter((c) => !c.hidden)
+						.map((c) => c.name)
+						.includes(e),
+				)
+				.join(","),
+		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [category, restaurant, params.set]);
 	useEffect(() => {
@@ -167,7 +175,7 @@ const OrderPage = () => {
 	}, [restaurant?.username, session.data?.restaurant?.username, session.status]);
 
 	const levelOptions: TModifierLevel[] = ["none", "lite", "reg", "extra"];
-	const levelLabel: Record<TModifierLevel, string> = { none: "None", lite: "Light", reg: "Regular", extra: "Extra" };
+	const levelLabel: Record<TModifierLevel, string> = { none: "None", lite: "Lite", reg: "Reg", extra: "Extra" };
 	const onCustomizationConfirm = () => {
 		if (!customizationItem) return;
 		addItemToSelection(customizationItem, customizationDraft);
@@ -206,11 +214,16 @@ const OrderPage = () => {
 				{restaurant && (
 					<div className="category">
 						<div className="itemCategories" ref={categories} onScroll={onCategoryScroll}>
-							{restaurant?.profile?.categories?.map((item, i) => (
-								<ActionCard key={i} className={`menuCategory ${category.includes(item) ? "active" : ""}`} onClick={() => onCategoryClick(item)}>
-									<span className="title">{item}</span>
-								</ActionCard>
-							))}
+							{restaurant?.profile?.categorySettings
+								?.filter((c) => !c.hidden)
+								.map((setting, i) => (
+									<ActionCard
+										key={i}
+										className={`menuCategory ${category.includes(setting.name) ? "active" : ""}`}
+										onClick={() => onCategoryClick(setting.name)}>
+										<span className="title">{setting.name}</span>
+									</ActionCard>
+								))}
 							<div className="space" />
 							<div className={`scrollLeft ${leftCategoryScroll ? "show" : ""}`} onClick={categoryScrollLeft}>
 								<Icon code="f053" type="solid" />
@@ -242,8 +255,6 @@ const OrderPage = () => {
 													restrictOrder={!eligibleToOrder}
 													increaseQuantity={increaseProductQuantity}
 													decreaseQuantity={decreaseProductQuantity}
-													showInfo={item._id.toString() === showInfoCard.toString()}
-													setShowInfo={(v) => setShowInfoCard(v)}
 													show={!!item.image}
 													quantity={
 														(selectedProducts.some((obj) => obj._id === item._id) &&
@@ -267,8 +278,6 @@ const OrderPage = () => {
 											restrictOrder={!eligibleToOrder}
 											increaseQuantity={increaseProductQuantity}
 											decreaseQuantity={decreaseProductQuantity}
-											showInfo={item._id.toString() === showInfoCard.toString()}
-											setShowInfo={(v) => setShowInfoCard(v)}
 											show={!!item.image}
 											quantity={
 												(selectedProducts.some((obj) => obj._id === item._id) &&
@@ -339,25 +348,34 @@ const OrderPage = () => {
 							<div className="customizationField">
 								<span className="label">Milk</span>
 								<div className="choiceGroup">
-									{customizationItem?.customization?.milkOptions?.map((milk, i) => (
-										<button
-											key={milk}
-											type="button"
-											className={customizationDraft.milk === milk || (!customizationDraft.milk && i === 0) ? "active" : ""}
-											onClick={() => setCustomizationDraft((v) => ({ ...v, milk }))}>
-											{milk}
-										</button>
-									))}
+									{customizationItem?.customization?.milkOptions?.map((milk, i) => {
+										const isOutOfStock = restaurant?.profile?.milkOptions?.some((option) => option.name === milk && option.hidden);
+										return (
+											<button
+												key={milk}
+												type="button"
+												disabled={isOutOfStock}
+												className={`${customizationDraft.milk === milk || (!customizationDraft.milk && i === 0) ? "active" : ""} ${isOutOfStock ? "danger" : ""}`.trim()}
+												onClick={() => setCustomizationDraft((v) => ({ ...v, milk }))}>
+												{milk}
+												{isOutOfStock ? " (out of stock)" : ""}
+											</button>
+										);
+									})}
 								</div>
 							</div>
 						)}
 						{(customizationItem?.customization?.flavorOptions?.length ?? 0) > 0 && (
 							<div className="flavorRows">
 								{customizationItem?.customization?.flavorOptions?.map((flavor) => {
+									const isOutOfStock = restaurant?.profile?.addonOptions?.some((option) => option.name === flavor && option.hidden);
 									const current = customizationDraft.flavors?.find((f) => f.name === flavor);
 									return (
 										<div className="flavorRow" key={flavor}>
-											<span>{flavor}</span>
+											<span className={isOutOfStock ? "danger" : ""}>
+												{flavor}
+												{isOutOfStock ? " (out of stock)" : ""}
+											</span>
 											<div className="choiceGroup">
 												{levelOptions.map((level) => (
 													<button

@@ -18,6 +18,25 @@ const ProfileSchema = new mongoose.Schema<TProfile>(
 		},
 		gstInclusive: { type: Boolean, default: false },
 		categories: [{ type: String, trim: true, lowercase: true, match: /^[^,]*$/ }],
+		categorySettings: [
+			{
+				name: { type: String, trim: true, lowercase: true, match: /^[^,]*$/ },
+				color: { type: String, trim: true, default: "#64748b" },
+				hidden: { type: Boolean, default: false },
+			},
+		],
+		milkOptions: [
+			{
+				name: { type: String, trim: true },
+				hidden: { type: Boolean, default: false },
+			},
+		],
+		addonOptions: [
+			{
+				name: { type: String, trim: true },
+				hidden: { type: Boolean, default: false },
+			},
+		],
 		avatar: { type: String, trim: true },
 		cover: { type: String, trim: true },
 		photos: [{ type: String, trim: true }],
@@ -34,6 +53,7 @@ ProfileSchema.pre("save", async function () {
 	}
 
 	this.categories = Array.from(new Set(this.categories));
+	if (!this.categorySettings?.length) this.categorySettings = this.categories.map((name) => ({ name, color: "#64748b", hidden: false }));
 });
 ProfileSchema.post("save", async function () {
 	await Accounts.updateOne({ username: this.restaurantID }, { $set: { profile: this._id } });
@@ -51,4 +71,7 @@ export type TProfile = HydratedDocument<{
 	themeColor: TThemeColor;
 	gstInclusive: boolean;
 	categories: Array<string>;
+	categorySettings?: Array<{ name: string; color: string; hidden: boolean }>;
+	milkOptions?: Array<{ name: string; hidden: boolean }>;
+	addonOptions?: Array<{ name: string; hidden: boolean }>;
 }>;

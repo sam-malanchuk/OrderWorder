@@ -141,8 +141,8 @@ const CartPage = (props: TCartPageProps) => {
 							) : (
 								<>
 									<p>Sub Total</p>
-									<span className="totalValue rupee">{order?.orderTotal} </span>
-									{order?.orderTotal && <span className="plusTaxes"> + ₹{order?.taxTotal} Tax</span>}
+									{(order?.orderTotal ?? 0) > 0 && <span className="totalValue rupee">{order?.orderTotal} </span>}
+									{(order?.orderTotal ?? 0) > 0 && <span className="plusTaxes"> + ${order?.taxTotal} Tax</span>}
 								</>
 							)}
 						</div>
@@ -166,22 +166,32 @@ const CartPage = (props: TCartPageProps) => {
 				</div>
 				{order && (
 					<div className={clsx("taxDetails", showTaxSummary && "show")}>
-						<CartTaxItem name="Item Total" amount={order?.orderTotal} />
+						{(order?.orderTotal ?? 0) > 0 && <CartTaxItem name="Item Total" amount={order?.orderTotal} />}
 						<hr className="itemHr" />
-						<CartTaxItem
-							className="taxSummaryTitle"
-							name={showTaxSummary ? "Tax Summary" : "Tax Total"}
-							subtitle={showTaxSummary ? "collapse" : "show details"}
-							amount={order?.taxTotal}
-							onClick={() => setShowTaxSummary((v) => !v)}
-						/>
-						<div className="taxSummary">
-							{order?.products?.map((product, i) => (
-								<CartTaxItem key={i} name={product?.name ?? ""} size="mini" taxPercent={product?.taxPercent} amount={product?.quantity * product?.tax} />
-							))}
-						</div>
-						<hr />
-						<CartTaxItem name="Grand Total" amount={order?.orderTotal + order?.taxTotal} />
+						{(order?.taxTotal ?? 0) > 0 && (
+							<>
+								<CartTaxItem
+									className="taxSummaryTitle"
+									name={showTaxSummary ? "Tax Summary" : "Tax Total"}
+									subtitle={showTaxSummary ? "collapse" : "show details"}
+									amount={order?.taxTotal}
+									onClick={() => setShowTaxSummary((v) => !v)}
+								/>
+								<div className="taxSummary">
+									{order?.products?.map((product, i) => (
+										<CartTaxItem
+											key={i}
+											name={product?.name ?? ""}
+											size="mini"
+											taxPercent={product?.taxPercent}
+											amount={product?.quantity * product?.tax}
+										/>
+									))}
+								</div>
+							</>
+						)}
+						{(order?.orderTotal ?? 0) > 0 && <hr />}
+						{(order?.orderTotal ?? 0) > 0 && <CartTaxItem name="Grand Total" amount={order?.orderTotal + order?.taxTotal} />}
 					</div>
 				)}
 			</div>
