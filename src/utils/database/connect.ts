@@ -32,6 +32,7 @@ async function connectDB() {
 			})
 			.catch((error) => {
 				console.error("🍂 MongoDB Connection Failed: ", error);
+				throw error;
 			});
 	}
 
