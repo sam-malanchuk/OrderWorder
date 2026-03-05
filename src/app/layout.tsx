@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Gliff } from "xtreme-ui";
 import { GlobalProvider } from "#components/context";
+import ScrollToTop from "#components/layout/ScrollToTop";
 import { montserrat } from "#utils/helper/fontHelper";
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "#utils/seo/constants";
 import "./globals.scss";
@@ -36,7 +37,10 @@ export default function RootLayout({ children }: IRootProps) {
 				<Gliff next />
 			</head>
 			<body suppressHydrationWarning>
-				<GlobalProvider>{children}</GlobalProvider>
+				<GlobalProvider>
+					<ScrollToTop />
+					{children}
+				</GlobalProvider>
 			</body>
 		</html>
 	);
