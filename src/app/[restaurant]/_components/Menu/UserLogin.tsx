@@ -13,6 +13,7 @@ const UserLogin = ({ setOpen, open }: UserLoginProps) => {
 	const table = params.get("table") ?? "1";
 	const [buttonLabel, setButtonLabel] = useState("Order");
 	const [busy, setBusy] = useState(false);
+	const [formResetKey, setFormResetKey] = useState(0);
 
 	const [fname, setFName] = useState("");
 	const [lname, setLName] = useState("");
@@ -49,6 +50,7 @@ const UserLogin = ({ setOpen, open }: UserLoginProps) => {
 		if (!open) return;
 		setFName("");
 		setLName("");
+		setFormResetKey((v) => v + 1);
 	}, [open]);
 
 	return (
@@ -62,10 +64,12 @@ const UserLogin = ({ setOpen, open }: UserLoginProps) => {
 			<div className="content">
 				<div className="otpContainer">
 					<Textfield
+						key={`fname-${formResetKey}`}
 						id="user-login-fname"
+						name="order-first-name"
 						className="fName"
 						placeholder="First Name"
-						autoComplete="off"
+						autoComplete="new-password"
 						autoCorrect="off"
 						autoCapitalize="words"
 						spellCheck={false}
@@ -73,10 +77,12 @@ const UserLogin = ({ setOpen, open }: UserLoginProps) => {
 						onChange={(e: ChangeEvent<HTMLInputElement>) => setFName(e.target.value)}
 					/>
 					<Textfield
+						key={`lname-${formResetKey}`}
 						id="user-login-lname"
+						name="order-last-name"
 						className="lName"
 						placeholder="Last Name"
-						autoComplete="off"
+						autoComplete="new-password"
 						autoCorrect="off"
 						autoCapitalize="words"
 						spellCheck={false}
