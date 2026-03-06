@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button, Lottie } from "xtreme-ui";
 
@@ -20,7 +20,8 @@ const CartPage = (props: TCartPageProps) => {
 	const params = useSearchParams();
 	const pathname = usePathname();
 	const router = useRouter();
-	const table = params.get("table");
+	const session = useSession();
+	const table = params.get("table") ?? "1";
 	const queryString = params.toString();
 	const { order, placeOrder, placingOrder, cancelOrder, cancelingOrder } = useOrder();
 	const [showOrderHistory, setShowOrderHistory] = useState(false);
@@ -71,8 +72,10 @@ const CartPage = (props: TCartPageProps) => {
 			router.replace(pathname);
 		};
 
+		if (session.status !== "authenticated") return;
+		if (placingOrder) return;
 		if (order?.table && order?.table !== table) cancelAndSignout();
-	}, [cancelOrder, order, pathname, router, table]);
+	}, [cancelOrder, order?.table, pathname, placingOrder, router, session.status, table]);
 
 	// useEffect(() => {
 	// 	if (userOrderEnd) {
