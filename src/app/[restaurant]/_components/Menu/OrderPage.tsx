@@ -1,5 +1,5 @@
 import { signOut, useSession } from "next-auth/react";
-import { type SyntheticEvent, type UIEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type SyntheticEvent, type UIEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActionCard, Button, Icon, Spinner } from "xtreme-ui";
 
 import SearchButton from "#components/base/SearchButton";
@@ -41,6 +41,7 @@ const OrderPage = () => {
 	const [customizationOpen, setCustomizationOpen] = useState(false);
 	const [customizationItem, setCustomizationItem] = useState<TMenuCustom>();
 	const [customizationDraft, setCustomizationDraft] = useState<TCustomizationDraft>({ flavors: [] });
+	const [queuedProduct, setQueuedProduct] = useState<TMenuCustom>();
 
 	const [filteredProducts, setFilteredProducts] = useState<Array<TMenuCustom>>(menus);
 	const [selectedProducts, setSelectedProducts] = useState<Array<TMenuCustom>>([]);
@@ -85,34 +86,50 @@ const OrderPage = () => {
 	const onLoginClick = () => {
 		setLoginOpen(true);
 	};
-	const addItemToSelection = (product: TMenuCustom, selectedCustomization?: TCustomizationDraft) => {
-		const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
-		const cartKey = `${product._id.toString()}-${selectedCustomization?.sweetness ?? ""}-${selectedCustomization?.ice ?? ""}-${selectedCustomization?.temperature ?? ""}-${selectedCustomization?.milk ?? ""}-${flavorKey}`;
-		const selection = [...selectedProducts];
-		if (selectedProducts.some((item) => item.cartKey === cartKey)) {
-			selection.forEach((item) => {
-				if (item.cartKey === cartKey) item.quantity++;
+	const addItemToSelection = useCallback(
+		(product: TMenuCustom, selectedCustomization?: TCustomizationDraft) => {
+			const flavorKey = selectedCustomization?.flavors?.map((f) => `${f.name}:${f.level}`).join("|") ?? "";
+			const cartKey = `${product._id.toString()}-${selectedCustomization?.sweetness ?? ""}-${selectedCustomization?.ice ?? ""}-${selectedCustomization?.temperature ?? ""}-${selectedCustomization?.milk ?? ""}-${flavorKey}`;
+			const selection = [...selectedProducts];
+			if (selectedProducts.some((item) => item.cartKey === cartKey)) {
+				selection.forEach((item) => {
+					if (item.cartKey === cartKey) item.quantity++;
+				});
+			} else {
+				selection.push({ ...product, quantity: 1, selectedCustomization, cartKey } as unknown as TMenuCustom);
+			}
+			setSelectedProducts(selection);
+		},
+		[selectedProducts],
+	);
+	const openProductCustomization = useCallback(
+		(product: TMenuCustom) => {
+			if (!product.customization?.enabled) return addItemToSelection(product);
+
+			const hiddenAddons = new Set((restaurant?.profile?.addonOptions ?? []).filter((option) => option.hidden).map((option) => option.name));
+			const availableDefaultFlavors = (product.customization?.defaultFlavors ?? []).filter((flavor) => !hiddenAddons.has(flavor.name));
+
+			setCustomizationItem(product);
+			setCustomizationDraft({
+				sweetness: product.customization?.sweetness?.enabled ? product.customization.sweetness.defaultLevel : undefined,
+				ice: product.customization?.ice?.enabled ? product.customization.ice.defaultLevel : undefined,
+				temperature: product.customization?.temperature?.enabled ? product.customization.temperature.defaultValue : undefined,
+				milk: product.customization?.defaultMilk,
+				flavors: availableDefaultFlavors,
 			});
-		} else {
-			selection.push({ ...product, quantity: 1, selectedCustomization, cartKey } as unknown as TMenuCustom);
-		}
-		setSelectedProducts(selection);
-	};
+			setCustomizationOpen(true);
+		},
+		[addItemToSelection, restaurant?.profile?.addonOptions],
+	);
 	const increaseProductQuantity = (product: TMenuCustom) => {
-		if (!product.customization?.enabled) return addItemToSelection(product);
+		if (!showOrderButton) return;
+		if (session.data?.role !== "customer") {
+			setQueuedProduct(product);
+			setLoginOpen(true);
+			return;
+		}
 
-		const hiddenAddons = new Set((restaurant?.profile?.addonOptions ?? []).filter((option) => option.hidden).map((option) => option.name));
-		const availableDefaultFlavors = (product.customization?.defaultFlavors ?? []).filter((flavor) => !hiddenAddons.has(flavor.name));
-
-		setCustomizationItem(product);
-		setCustomizationDraft({
-			sweetness: product.customization?.sweetness?.enabled ? product.customization.sweetness.defaultLevel : undefined,
-			ice: product.customization?.ice?.enabled ? product.customization.ice.defaultLevel : undefined,
-			temperature: product.customization?.temperature?.enabled ? product.customization.temperature.defaultValue : undefined,
-			milk: product.customization?.defaultMilk,
-			flavors: availableDefaultFlavors,
-		});
-		setCustomizationOpen(true);
+		openProductCustomization(product);
 	};
 	const decreaseProductQuantity = (product: TMenuCustom) => {
 		let selection = [...selectedProducts];
@@ -175,6 +192,13 @@ const OrderPage = () => {
 	}, [session]);
 
 	useEffect(() => {
+		if (session.data?.role !== "customer" || !queuedProduct) return;
+		openProductCustomization(queuedProduct);
+		setQueuedProduct(undefined);
+		setLoginOpen(false);
+	}, [openProductCustomization, queuedProduct, session.data?.role, setLoginOpen]);
+
+	useEffect(() => {
 		if (session.status === "authenticated" && session.data?.restaurant?.username !== restaurant?.username) signOut();
 	}, [restaurant?.username, session.data?.restaurant?.username, session.status]);
 
@@ -202,9 +226,7 @@ const OrderPage = () => {
 					</h1>
 					<div className="options">
 						<SearchButton setSearchActive={setSearchActive} placeholder="Search menu" value={searchValue} setValue={setSearchValue} />
-						{(!session.data?.role || !showOrderButton) && (
-							<Button className="loginButton" label={showOrderButton ? "Order" : "Scan"} onClick={onLoginClick} />
-						)}
+						{!showOrderButton && <Button className="loginButton" label="Scan" onClick={onLoginClick} />}
 						{eligibleToOrder && (
 							<Button
 								icon="e43b"
@@ -254,7 +276,7 @@ const OrderPage = () => {
 							</h1>
 						</div>
 						{hasImageItems && (
-							<div className={`itemContainer ${!eligibleToOrder ? "restrictOrder " : ""}`}>
+							<div className={`itemContainer ${!showOrderButton ? "restrictOrder " : ""}`}>
 								<div>
 									{filteredProducts?.map(
 										(item, key) =>
@@ -262,7 +284,7 @@ const OrderPage = () => {
 												<MenuCard
 													key={key}
 													item={item}
-													restrictOrder={!eligibleToOrder}
+													restrictOrder={!showOrderButton}
 													increaseQuantity={increaseProductQuantity}
 													decreaseQuantity={decreaseProductQuantity}
 													show={!!item.image}
@@ -279,13 +301,13 @@ const OrderPage = () => {
 						)}
 						{hasImageItems && hasNonImageItems && <hr />}
 						{hasNonImageItems && (
-							<div className={`itemContainer withoutImage ${!eligibleToOrder ? "restrictOrder " : ""}`}>
+							<div className={`itemContainer withoutImage ${!showOrderButton ? "restrictOrder " : ""}`}>
 								<div>
 									{filteredProducts?.map((item, key) => (
 										<MenuCard
 											key={key}
 											item={item}
-											restrictOrder={!eligibleToOrder}
+											restrictOrder={!showOrderButton}
 											increaseQuantity={increaseProductQuantity}
 											decreaseQuantity={decreaseProductQuantity}
 											show={!!item.image}
